@@ -1,4 +1,4 @@
-import mysql from 'mysql2';
+import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 
 dotenv.config({path:'./config/config.env'})
@@ -14,7 +14,7 @@ if (!dbHost||!dbPort||!dbUsername||!dbPassword||!dbName) {
 }
 
 // create the connection to database
-const connection = mysql.createConnection({
+const connection = mysql.createPool({
     host: dbHost,
     port: dbPort,
     user: dbUsername,

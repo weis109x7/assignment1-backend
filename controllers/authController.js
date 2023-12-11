@@ -1,5 +1,5 @@
 
-import connection from "../config/database.js";
+import connection from "../utils/database.js";
 
 function getLogin(req, res, next) {
 
@@ -19,19 +19,16 @@ function getLogin(req, res, next) {
 }
 
 function getUser(req, res, next) {
-
       // simple query
-    connection.query(
-        'SELECT * FROM accounts',
-        function(err, results, fields) {
-        console.log(results); // results contains rows returned by server
-        console.log(fields); // fields contains extra meta data about results, if available
-        res.status(200).json({
-            success : true,
-            message : results
+    connection.execute('SELECT * FROM accounts')
+        .then(([data,fields])=>{
+            res.status(200).json({
+                success : true,
+                message : data
+            });
+        }).catch((error)=>{
+            console.log(error);
         });
-        }
-    );
 }
 
 export { getLogin, getUser}
