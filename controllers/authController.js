@@ -10,8 +10,9 @@ import { sendToken } from "../utils/jwtToken.js";
 import dotenv from 'dotenv';
 dotenv.config({path:'./config/config.env'})
 
-
+//login api
 export const getLogin = catchAsyncErrors(async (req, res, next) => {
+    //get userId and password from req body
     const { userId, password } = req.body;
     
     //error if null
@@ -28,5 +29,6 @@ export const getLogin = catchAsyncErrors(async (req, res, next) => {
     //not matched return error
     if (!passMatched) return next(new ErrorHandler("invalid credentials",401));
 
+    //all success then send userId to jwt to create token and store in cookie
     sendToken(userId,200,res);
 })

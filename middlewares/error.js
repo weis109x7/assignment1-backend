@@ -1,8 +1,10 @@
+//import essentials
 import ErrorHandler from "../utils/errorHandler.js";
 
 export function errorMiddleware(err, req, res, next) {
     err.statusCode = err.statusCode || 500;
-
+    
+    //dev error message show stacktrace for everything
     if(process.env.NODE_ENV === 'development') {
         res.status(err.statusCode).json({
             success : false,
@@ -12,6 +14,7 @@ export function errorMiddleware(err, req, res, next) {
         });
     }
 
+    //prod error message show generic error msg
     if(process.env.NODE_ENV === 'production ') {
         let error = {...err};
 

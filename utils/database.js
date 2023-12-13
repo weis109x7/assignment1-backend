@@ -1,6 +1,8 @@
+//import essentials
 import mysql from 'mysql2';
-import dotenv from 'dotenv';
 
+//load config env
+import dotenv from 'dotenv';
 dotenv.config({path:'./config/config.env'})
 
 //load variabes from config.env
