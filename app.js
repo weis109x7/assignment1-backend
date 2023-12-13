@@ -29,6 +29,8 @@ app.use('/api/v1',auth);
 import user from './routes/user.js'
 app.use('/api/v1',user);
 
+import group from './routes/group.js'
+app.use('/api/v1',group);
 
 // Handle unhandled routes
 app.all('*', (req, res, next) => {
