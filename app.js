@@ -1,6 +1,5 @@
 //import essentials
 import express from 'express';
-import dotenv from 'dotenv';
 import ErrorHandler from './utils/errorHandler.js';
 
 const app = express();
@@ -13,6 +12,7 @@ process.on('uncaughtException', err => {
 });
 
 //load config
+import dotenv from 'dotenv';
 dotenv.config({path:'./config/config.env'})
 
 //setup body parser middleware

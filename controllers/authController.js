@@ -4,7 +4,6 @@ import connection from "../utils/database.js";
 import ErrorHandler from "../utils/errorHandler.js";
 import bcrypt from 'bcryptjs'
 import catchAsyncErrors from "../middlewares/catchAsyncErrors.js";
-import jwt from "jsonwebtoken";
 import { sendToken } from "../utils/jwtToken.js";
 
 //load config
