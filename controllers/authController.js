@@ -1,34 +1,33 @@
 
+//import essentials
 import connection from "../utils/database.js";
+import ErrorHandler from "../utils/errorHandler.js";
+import bcrypt from 'bcryptjs'
+import catchAsyncErrors from "../middlewares/catchAsyncErrors.js";
+import jwt from "jsonwebtoken";
+import { sendToken } from "../utils/jwtToken.js";
 
-function getLogin(req, res, next) {
+//load config
+import dotenv from 'dotenv';
+dotenv.config({path:'./config/config.env'})
 
-    const { email, password } = req.body;
 
-    if(!email || !password) {
-        res.status(200).json({
-            success : false,
-            message : "failed login"
-        });
+export const getLogin = catchAsyncErrors(async (req, res, next) => {
+    const { userId, password } = req.body;
+    
+    //error if null
+    if(!userId || !password) {
+        return next(new ErrorHandler("empty username/password",400));
     }
 
-    else res.status(200).json({
-        success : true,
-        message : req.body
-    });
-}
+    //look in db for account and retrive passhash to compare
+    const [data,fields] = await connection.execute(`SELECT password FROM accounts  WHERE userId="${userId}";`);
+    //no user found
+    if (data.length==0) return next(new ErrorHandler("invalid credentials",401));
+    //check password match
+    const passMatched = await bcrypt.compare(password, data[0]["password"]);
+    //not matched return error
+    if (!passMatched) return next(new ErrorHandler("invalid credentials",401));
 
-function getUser(req, res, next) {
-      // simple query
-    connection.execute('SELECT * FROM accounts')
-        .then(([data,fields])=>{
-            res.status(200).json({
-                success : true,
-                message : data
-            });
-        }).catch((error)=>{
-            console.log(error);
-        });
-}
-
-export { getLogin, getUser}
+    sendToken(userId,200,res);
+})
