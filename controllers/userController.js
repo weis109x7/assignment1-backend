@@ -5,7 +5,7 @@ import ErrorHandler from "../utils/errorHandler.js";
 import bcrypt from 'bcryptjs'
 import catchAsyncErrors from "../middlewares/catchAsyncErrors.js";
 
-//newUser api logic
+//newUser api
 export const newUser = catchAsyncErrors(async (req, res, next) => {
     //get user details from req body
     const {userId,password,email,userGroup,isActive} = req.body;
@@ -35,6 +35,7 @@ export const newUser = catchAsyncErrors(async (req, res, next) => {
     });
 });
 
+//editUser api
 export const editUser = catchAsyncErrors(async (req, res, next) => {
     //get user details from req body
     const {userId,password,email,userGroup,isActive} = req.body;
@@ -57,14 +58,15 @@ export const editUser = catchAsyncErrors(async (req, res, next) => {
                                                 ) 
 
     //return success message when success
-    //catch async error will throw error if insert failed
+    //catch async error will throw error if query fails,
+    //no error if invalid userId???
     return res.status(200).json({
         success : true,
         message : data
     });
 });
 
-//get user api logic
+//get all users 
 export const getUsers = catchAsyncErrors(async (req, res, next) => {
     //get all users in database
     const [data,fields] = await connection.execute(`SELECT * FROM accounts;`);
