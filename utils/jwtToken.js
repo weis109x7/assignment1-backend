@@ -9,7 +9,7 @@ export const sendToken = (userId, statusCode, res) => {
 
     // Options for cookie
     const options = {
-        expires : new Date(Date.now() + process.env.COOKIE_EXPIRES_TIME * 24*60*60*1000),
+        expires : new Date(Date.now() + process.env.COOKIE_EXPIRES_DAY * 24*60*60*1000),
         httpOnly : true
     };
 
@@ -24,6 +24,5 @@ export const sendToken = (userId, statusCode, res) => {
             success : true,
             token
         });
-
     
 }

@@ -8,6 +8,9 @@ import connection from "../utils/database.js";
 export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
     let token;
 
+    //if no bearer token use cookie token
+    token = req.cookies["token"];
+
     //if token avaliable put it in token variable
     if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
@@ -41,11 +44,12 @@ export const isAuthorized = (...groups) => {
         //get intersection of user group and allowed group to see if user is allowed
         const authorizedGroup = groups.filter(value => userGroup.includes(value));
 
-        //if empty means user not allowed
-        if(!authorizedGroup) {
+        //if len of 0 means user not allowed
+        if(authorizedGroup.length==0) {
             return next(new ErrorHandler(`Role(${req.user["userGroup"]}) is not allowed to access this resource.`, 403))
         }
-        
+
         next();
     }
-}
+};
+

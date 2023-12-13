@@ -18,6 +18,10 @@ dotenv.config({path:'./config/config.env'})
 //setup body parser middleware
 app.use(express.json());
 
+//setup cookie-parser middleware
+import cookieParser from 'cookie-parser';
+app.use(cookieParser())
+
 //setup routes
 import auth from './routes/auth.js'
 app.use('/api/v1',auth);

@@ -19,14 +19,42 @@ export const newUser = catchAsyncErrors(async (req, res, next) => {
     const hashedpassword = await bcrypt.hash(password, 10);
 
     //try to insert data to database
-    const [data,fields] = await connection.execute(`INSERT INTO accounts VALUES (
-                                                    "${userId}",
+    const [data,fields] = await connection.execute(`INSERT INTO accounts VALUES ("${userId}",
                                                     "${hashedpassword}",
                                                     ${email?('"'+email+'"'):"NULL"},
-                                                    ${userGroup?('"'+userGroup+'"'):"NULL"},
+                                                    "${userGroup??""}",
                                                     "${isActive ?? "active"}");`
                                                 ) // if email/userGroup is blank, replace it with NULL else return email/userGroup
                                                 //if isActive not provided default to active
+
+    //return success message when success
+    //catch async error will throw error if insert failed
+    return res.status(200).json({
+        success : true,
+        message : data
+    });
+});
+
+export const editUser = catchAsyncErrors(async (req, res, next) => {
+    //get user details from req body
+    const {userId,password,email,userGroup,isActive} = req.body;
+
+    //build query, if email not provided set back to NULL
+    var query=
+    `email = ${email?('"'+email+'"'):"NULL"},
+    userGroup = "${userGroup}",
+    isActive = "${isActive}"`;
+
+    //hash password with bcrypt if password provided
+    const hashedpassword = password ? await bcrypt.hash(password, 10) : undefined ;
+    //if password provided append hashed password to query else wont update password
+    if (password) query+=`,password="${hashedpassword}"`;
+
+    //try to edit data of database
+    const [data,fields] = await connection.execute(`UPDATE accounts
+                                                    SET ${query}
+                                                    WHERE userId="${userId}";`
+                                                ) 
 
     //return success message when success
     //catch async error will throw error if insert failed

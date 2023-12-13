@@ -11,7 +11,7 @@ import dotenv from 'dotenv';
 dotenv.config({path:'./config/config.env'})
 
 //login api
-export const getLogin = catchAsyncErrors(async (req, res, next) => {
+export const login = catchAsyncErrors(async (req, res, next) => {
     //get userId and password from req body
     const { userId, password } = req.body;
     
@@ -32,3 +32,17 @@ export const getLogin = catchAsyncErrors(async (req, res, next) => {
     //all success then send userId to jwt to create token and store in cookie
     sendToken(userId,200,res);
 })
+
+// Logout user
+export const logout = catchAsyncErrors( async(req, res, next) => {
+    //set cookie to none
+    res.cookie('token', 'none', {
+        expires : new Date(Date.now()),
+        httpOnly : true 
+    });
+
+    res.status(200).json({
+        success : true,
+        message : 'Logged out successfully.'
+    });
+});
