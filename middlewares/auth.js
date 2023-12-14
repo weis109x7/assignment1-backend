@@ -30,7 +30,7 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
     //token valid but user not found?? return error
     if (data.length==0) return next(new ErrorHandler("JSON Web token is invalid. Try Again!",500));
 
-    //throw user data in req.user for next middleware to use
+    //store user data in req.user for next middleware to use
     req.user = data[0];
 
     next();
@@ -39,9 +39,9 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
 // handling users roles
 export const isAuthorized = (...groups) => {
     return (req, res, next) => {
-        //retrive user group and convert to array
+        //retrive user group from isAuthenthicated middleware and convert to array
         const userGroup = req.user["userGroup"].split(",")
-        //get intersection of user group and allowed group to see if user is allowed
+        //get intersection of user group and allowed group to see if user is authorized
         const authorizedGroup = groups.filter(value => userGroup.includes(value));
 
         //if len of 0 means user not allowed
