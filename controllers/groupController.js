@@ -28,3 +28,16 @@ export const newGroup = catchAsyncErrors(async (req, res, next) => {
         message : data
     });
 })
+
+//get all group names 
+export const getGroups = catchAsyncErrors(async (req, res, next) => {
+    //get all group names in database
+    const [data,fields] = await connection.execute(`SELECT userGroup FROM roles;`);
+
+    //return success message when success
+    //catch async error will throw error if query failed
+    return res.status(200).json({
+        success : true,
+        message : data
+    });
+});
