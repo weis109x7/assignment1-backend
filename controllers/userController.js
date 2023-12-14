@@ -13,7 +13,6 @@ export const newUser = catchAsyncErrors(async (req, res, next) => {
     if (!userId || !password) {
         return next(new ErrorHandler("empty username/password fields", 400));
     }
-    console.log(passwordChecker(password));
 
     //throw error if password requirements not fufiled
     if (!passwordChecker(password)) {
