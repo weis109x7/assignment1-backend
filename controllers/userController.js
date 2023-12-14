@@ -66,6 +66,36 @@ export const editUser = catchAsyncErrors(async (req, res, next) => {
     });
 });
 
+//updateprofile for self api
+export const updateProfile = catchAsyncErrors(async (req, res, next) => {
+    //get user details from req body
+    const userId = req.user["userId"];
+    const {password,email} = req.body;
+
+    //build query, if email not provided set back to NULL
+    var query=
+    `email = ${email?('"'+email+'"'):"NULL"}`;
+
+    //hash password with bcrypt if password provided
+    const hashedpassword = password ? await bcrypt.hash(password, 10) : undefined ;
+    //if password provided append hashed password to query else wont update password
+    if (password) query+=`,password="${hashedpassword}"`;
+
+    //try to edit data of database
+    const [data,fields] = await connection.execute(`UPDATE accounts
+                                                    SET ${query}
+                                                    WHERE userId="${userId}";`
+                                                ) 
+
+    //return success message when success
+    //catch async error will throw error if query fails,
+    //no error if invalid userId???
+    return res.status(200).json({
+        success : true,
+        message : data
+    });
+});
+
 //get all users 
 export const getUsers = catchAsyncErrors(async (req, res, next) => {
     //get all users in database
