@@ -1,9 +1,9 @@
 //import essentials
-import mysql from 'mysql2';
+import mysql from "mysql2";
 
 //load config env
-import dotenv from 'dotenv';
-dotenv.config({path:'./config/config.env'})
+import dotenv from "dotenv";
+dotenv.config({ path: "./config/config.env" });
 
 //load variabes from config.env
 const dbHost = process.env.DB_HOST;
@@ -13,8 +13,8 @@ const dbPassword = process.env.DB_PASSWORD;
 const dbName = process.env.DB_NAME;
 
 //throw error if env not set
-if (!dbHost||!dbPort||!dbUsername||!dbPassword||!dbName) {
-    throw new Error('database environment variables must be set');
+if (!dbHost || !dbPort || !dbUsername || !dbPassword || !dbName) {
+    throw new Error("database environment variables must be set");
 }
 
 // create the connection to database
@@ -23,10 +23,9 @@ const connection = mysql.createPool({
     port: dbPort,
     user: dbUsername,
     password: dbPassword,
-    database: dbName
+    database: dbName,
 });
 
 const connectionPool = connection.promise();
 
 export default connectionPool;
-

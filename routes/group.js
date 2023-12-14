@@ -8,10 +8,9 @@ import { getGroups, newGroup } from "../controllers/groupController.js";
 import { isAuthenthicated, isAuthorized } from "../middlewares/auth.js";
 
 //add middleware authenthication and authorization
-router.use(isAuthenthicated,isAuthorized("admin"));
+router.use(isAuthenthicated, isAuthorized("admin"));
 //add routes with middlewares
-router.route('/group/new').post(newGroup);
-router.route('/group/getgroups').get(getGroups);
-
+router.route("/group/new").post(newGroup);
+router.route("/group/getgroups").get(getGroups);
 
 export default router;
