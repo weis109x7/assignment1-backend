@@ -17,7 +17,7 @@ export const login = catchAsyncErrors(async (req, res, next) => {
     
     //error if null
     if(!userId || !password) {
-        return next(new ErrorHandler("empty username/password",400));
+        return next(new ErrorHandler("invalid credentials",401));
     }
 
     //look in db for account and retrive passhash to compare

@@ -14,7 +14,13 @@ export const newUser = catchAsyncErrors(async (req, res, next) => {
     if(!userId || !password) {
         return next(new ErrorHandler("empty username/password fields",400));
     }
-    
+    console.log(passwordChecker(password));
+
+    //throw error if password requirements not fufiled
+    if (!passwordChecker(password)){
+        return next(new ErrorHandler("password needs to be 8-10char and contains alphanumeric and specialcharacter",400));
+    }
+
     //hash password with bcrypt
     const hashedpassword = await bcrypt.hash(password, 10);
 
@@ -47,10 +53,18 @@ export const editUser = catchAsyncErrors(async (req, res, next) => {
     userGroup = "${userGroup}",
     isActive = "${isActive}"`;
 
-    //hash password with bcrypt if password provided
-    const hashedpassword = password ? await bcrypt.hash(password, 10) : undefined ;
-    //if password provided append hashed password to query else wont update password
-    if (password) query+=`,password="${hashedpassword}"`;
+    var hashedpassword;
+    //if password provided
+    if (password){
+        //throw error if password requirements not fufiled
+        if (!passwordChecker(password)){
+            return next(new ErrorHandler("password needs to be 8-10char and contains alphanumeric and specialcharacter",400));
+        }
+        //hash password with bcrypt
+        hashedpassword= password ? await bcrypt.hash(password, 10) : undefined ;
+        //append hashed password to query else wont update password
+        query+=`,password="${hashedpassword}"`;
+    }
 
     //try to edit data of database
     const [data,fields] = await connection.execute(`UPDATE accounts
@@ -77,10 +91,18 @@ export const updateProfile = catchAsyncErrors(async (req, res, next) => {
     var query=
     `email = ${email?('"'+email+'"'):"NULL"}`;
 
-    //hash password with bcrypt if password provided
-    const hashedpassword = password ? await bcrypt.hash(password, 10) : undefined ;
-    //if password provided append hashed password to query else wont update password
-    if (password) query+=`,password="${hashedpassword}"`;
+    var hashedpassword;
+    //if password provided
+    if (password){
+        //throw error if password requirements not fufiled
+        if (!passwordChecker(password)){
+            return next(new ErrorHandler("password needs to be 8-10char and contains alphanumeric and specialcharacter",400));
+        }
+        //hash password with bcrypt
+        hashedpassword= password ? await bcrypt.hash(password, 10) : undefined ;
+        //append hashed password to query else wont update password
+        query+=`,password="${hashedpassword}"`;
+    };
 
     //try to edit data of database
     const [data,fields] = await connection.execute(`UPDATE accounts
@@ -100,7 +122,7 @@ export const updateProfile = catchAsyncErrors(async (req, res, next) => {
 //get all users 
 export const getUsers = catchAsyncErrors(async (req, res, next) => {
     //get all users in database
-    const [data,fields] = await connection.execute(`SELECT * FROM accounts;`);
+    const [data,fields] = await connection.execute(`SELECT userId,email,userGroup,isActive FROM accounts;`);
 
     //return success message when success
     //catch async error will throw error if query failed
@@ -109,3 +131,9 @@ export const getUsers = catchAsyncErrors(async (req, res, next) => {
         message : data
     });
 });
+
+function passwordChecker(password){
+    const regex = new RegExp(/^(?=.*[A-Za-z0-9])(?=.*[^A-Za-z0-9]).{8,10}$/);
+    return regex.test(password)
+}
+
