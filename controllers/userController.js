@@ -132,7 +132,9 @@ export const getUsers = catchAsyncErrors(async (req, res, next) => {
     });
 });
 
+//password checker function to make sure password fufils requirement
 function passwordChecker(password){
+    //regex matches 8-10 char with alphanumeric with special character
     const regex = new RegExp(/^(?=.*[A-Za-z0-9])(?=.*[^A-Za-z0-9]).{8,10}$/);
     return regex.test(password)
 }
