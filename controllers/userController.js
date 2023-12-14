@@ -22,11 +22,12 @@ export const newUser = catchAsyncErrors(async (req, res, next) => {
     const [data,fields] = await connection.execute(`INSERT INTO accounts VALUES ("${userId}",
                                                     "${hashedpassword}",
                                                     ${email?('"'+email+'"'):"NULL"},
-                                                    "${userGroup??""}",
-                                                    "${isActive ?? "active"}");`
+                                                    "${userGroup}",
+                                                    "${isActive}");`
                                                 ) // if email/userGroup is blank, replace it with NULL else return email/userGroup
                                                 //if isActive not provided default to active
 
+                                               
     //return success message when success
     //catch async error will throw error if insert failed
     return res.status(200).json({

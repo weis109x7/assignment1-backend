@@ -12,7 +12,7 @@ router.use(isAuthenthicated);
 //add routes with middlewares
 router.route('/user/new').post(isAuthorized("admin"),newUser);
 router.route('/user/edit').post(isAuthorized("admin"),editUser);
-router.route('/user/getall').get(isAuthorized("admin"),getUsers);
+router.route('/user/getusers').get(isAuthorized("admin"),getUsers);
 router.route('/user/update').post(updateProfile);
 
 export default router;
