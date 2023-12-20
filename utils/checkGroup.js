@@ -1,5 +1,6 @@
 import connection from "./database.js";
 
+//will return true if any group matches
 //input params userId=string GroupName=array of string,[string,string]
 export default async function checkGroup(userId, GroupName) {
     //get user data from database

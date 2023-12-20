@@ -15,6 +15,10 @@ process.on("uncaughtException", (err) => {
 import dotenv from "dotenv";
 dotenv.config({ path: "./config/config.env" });
 
+//setup cors midleware
+import cors from "cors";
+app.use(cors());
+
 //setup body parser middleware
 app.use(express.json());
 
