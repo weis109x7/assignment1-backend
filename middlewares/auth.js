@@ -9,9 +9,6 @@ import checkGroup from "../utils/checkGroup.js";
 export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
     let token;
 
-    //if no bearer token use cookie token
-    token = req.cookies["token"];
-
     //if token avaliable put it in token variable
     if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
         token = req.headers.authorization.split(" ")[1];

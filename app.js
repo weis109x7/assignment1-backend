@@ -22,10 +22,6 @@ app.use(cors());
 //setup body parser middleware
 app.use(express.json());
 
-//setup cookie-parser middleware
-import cookieParser from "cookie-parser";
-app.use(cookieParser());
-
 //import essential middlewares for routes
 import { isAuthenthicated, isAuthorized } from "./middlewares/auth.js";
 
