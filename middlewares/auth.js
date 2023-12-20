@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import catchAsyncErrors from "./catchAsyncErrors.js";
 import ErrorHandler from "../utils/errorHandler.js";
 import connection from "../utils/database.js";
+import checkGroup from "../utils/checkGroup.js";
 
 //handle user authenthicating
 export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
@@ -31,6 +32,7 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
     if (data.length == 0) return next(new ErrorHandler("JSON Web token is invalid. Try Again!", 500));
 
     //store user data in req.user for next middleware to use
+    //req.user contains userId,email,userGroup,isActive
     req.user = data[0];
 
     next();
@@ -38,17 +40,13 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
 
 // handling users roles
 export const isAuthorized = (...groups) => {
-    return (req, res, next) => {
-        //retrive user group from isAuthenthicated middleware and convert to array
-        const userGroup = req.user["userGroup"].split(",");
-        //get intersection of user group and allowed group to see if user is authorized
-        const authorizedGroup = groups.filter((value) => userGroup.includes(value));
-
-        //if len of 0 means user not allowed
-        if (authorizedGroup.length == 0) {
+    return catchAsyncErrors(async (req, res, next) => {
+        var authorized = await checkGroup(req.user["userId"], groups);
+        //if authorized =false means user not allowed
+        if (!authorized) {
             return next(new ErrorHandler(`Role(${req.user["userGroup"]}) is not allowed to access this resource.`, 403));
         }
 
         next();
-    };
+    });
 };

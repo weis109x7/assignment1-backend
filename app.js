@@ -22,15 +22,28 @@ app.use(express.json());
 import cookieParser from "cookie-parser";
 app.use(cookieParser());
 
-//setup routes
-import auth from "./routes/auth.js";
-app.use("/api/v1", auth);
+//import essential middlewares for routes
+import { isAuthenthicated, isAuthorized } from "./middlewares/auth.js";
 
-import user from "./routes/user.js";
-app.use("/api/v1", user);
+//import routes from auth controller
+import { login, logout } from "./controllers/authController.js";
+//add routes with middleware
+app.post("/api/v1/login", login);
+app.post("/api/v1/logout", isAuthenthicated, logout);
 
-import group from "./routes/group.js";
-app.use("/api/v1", group);
+//import routes from user controller
+import { newUser, getUsers, editUser, updateProfile } from "./controllers/userController.js";
+//add routes with middlewares
+app.post("/api/v1/user/new", isAuthenthicated, isAuthorized("admin"), newUser);
+app.post("/api/v1/user/edit", isAuthenthicated, isAuthorized("admin"), editUser);
+app.post("/api/v1/user/getusers", isAuthenthicated, isAuthorized("admin"), getUsers);
+app.post("/api/v1/user/update", isAuthenthicated, updateProfile);
+
+//import routes from group controller
+import { getGroups, newGroup } from "./controllers/groupController.js";
+//add routes with middlewares
+app.post("/api/v1/group/new", isAuthenthicated, isAuthorized("admin"), newGroup);
+app.post("/api/v1/group/getgroups", isAuthenthicated, isAuthorized("admin"), getGroups);
 
 // Handle unhandled routes
 app.all("*", (req, res, next) => {
