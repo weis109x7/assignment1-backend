@@ -23,13 +23,14 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     //retrive user data with token userId
-    const [data, fields] = await connection.execute(`SELECT userId,email,userGroup,isActive FROM accounts  WHERE userId="${decoded.id}";`);
+    const [data, fields] = await connection.execute(`SELECT userId,email,userGroup,isActive FROM accounts  WHERE userId= ? ;`, [decoded.id]);
 
     //token valid but user not found?? return error
     if (data.length == 0) return next(new ErrorHandler("JSON Web token is invalid. Try Again!", 500));
 
+    data[0].token = token; //add token to user data
     //store user data in req.user for next middleware to use
-    //req.user contains userId,email,userGroup,isActive
+    //req.user contains userId,email,userGroup,isActive and token
     req.user = data[0];
 
     next();

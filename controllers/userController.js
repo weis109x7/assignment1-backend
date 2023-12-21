@@ -7,7 +7,10 @@ import catchAsyncErrors from "../middlewares/catchAsyncErrors.js";
 //newUser api
 export const newUser = catchAsyncErrors(async (req, res, next) => {
     //get user details from req body
-    const { userId, password, email, userGroup, isActive } = req.body;
+    var { userId, password, email, userGroup, isActive } = req.body;
+
+    if (!email) email = null; //if email is blank set value to null
+    if (!(isActive === "active")) isActive = "disabled"; //if isActive is not active set to disabled
 
     //throw error if required terms is null
     if (!userId || !password) {
@@ -23,12 +26,7 @@ export const newUser = catchAsyncErrors(async (req, res, next) => {
     const hashedpassword = await bcrypt.hash(password, 10);
 
     //try to insert data to database
-    const [data, fields] = await connection.execute(`INSERT INTO accounts VALUES ("${userId}",
-                                                    "${hashedpassword}",
-                                                    ${email ? '"' + email + '"' : "NULL"},
-                                                    "${userGroup}",
-                                                    "${isActive}");`); // if email/userGroup is blank, replace it with NULL else return email/userGroup
-    //if isActive not provided default to active
+    const [data, fields] = await connection.execute(`INSERT INTO accounts VALUES (?,?,?,?,?);`, [userId, hashedpassword, email, userGroup, isActive]);
 
     //return success message when success
     //catch async error will throw error if insert failed
@@ -41,14 +39,11 @@ export const newUser = catchAsyncErrors(async (req, res, next) => {
 //editUser api
 export const editUser = catchAsyncErrors(async (req, res, next) => {
     //get user details from req body
-    const { userId, password, email, userGroup, isActive } = req.body;
+    var { userId, password, email, userGroup, isActive } = req.body;
 
-    //build query, if email not provided set back to NULL
-    var query = `email = ${email ? '"' + email + '"' : "NULL"},
-    userGroup = "${userGroup}",
-    isActive = "${isActive}"`;
+    if (!email) email = null; //if email is blank set value to null
+    if (!(isActive === "active")) isActive = "disabled"; //if isActive is not active set to disabled
 
-    var hashedpassword;
     //if password provided
     if (password) {
         //throw error if password requirements not fufiled
@@ -56,15 +51,18 @@ export const editUser = catchAsyncErrors(async (req, res, next) => {
             return next(new ErrorHandler("password needs to be 8-10char and contains alphanumeric and specialcharacter", 400));
         }
         //hash password with bcrypt
-        hashedpassword = password ? await bcrypt.hash(password, 10) : undefined;
-        //append hashed password to query else wont update password
-        query += `,password="${hashedpassword}"`;
+        password = await bcrypt.hash(password, 10);
+    } else {
+        //no password provided means user dosent want to change password, set to null
+        password = null;
     }
 
     //try to edit data of database
-    const [data, fields] = await connection.execute(`UPDATE accounts
-                                                    SET ${query}
-                                                    WHERE userId="${userId}";`);
+    const [data, fields] = await connection.execute(
+        //if password==null then use old password database value, if email==null then set null in database
+        `UPDATE accounts SET email = ? ,userGroup = ?, isActive = ? ,password= COALESCE(?,password) WHERE userId=?;`,
+        [email, userGroup, isActive, password, userId]
+    );
 
     //return success message when success
     //catch async error will throw error if query fails,
@@ -79,12 +77,10 @@ export const editUser = catchAsyncErrors(async (req, res, next) => {
 export const updateProfile = catchAsyncErrors(async (req, res, next) => {
     //get user details from req body
     const userId = req.user["userId"];
-    const { password, email } = req.body;
+    var { password, email } = req.body;
 
-    //build query, if email not provided set back to NULL
-    var query = `email = ${email ? '"' + email + '"' : "NULL"}`;
+    if (!email) email = null; //if email is blank set value to null
 
-    var hashedpassword;
     //if password provided
     if (password) {
         //throw error if password requirements not fufiled
@@ -92,15 +88,18 @@ export const updateProfile = catchAsyncErrors(async (req, res, next) => {
             return next(new ErrorHandler("password needs to be 8-10char and contains alphanumeric and specialcharacter", 400));
         }
         //hash password with bcrypt
-        hashedpassword = password ? await bcrypt.hash(password, 10) : undefined;
-        //append hashed password to query else wont update password
-        query += `,password="${hashedpassword}"`;
+        password = await bcrypt.hash(password, 10);
+    } else {
+        //no password provided means user dosent want to change password, set to null
+        password = null;
     }
 
     //try to edit data of database
-    const [data, fields] = await connection.execute(`UPDATE accounts
-                                                    SET ${query}
-                                                    WHERE userId="${userId}";`);
+    const [data, fields] = await connection.execute(
+        //if password==null then use old password database value, if email==null then set null in database
+        `UPDATE accounts SET email = ?,password= COALESCE(?,password) WHERE userId=?;`,
+        [email, password, userId]
+    );
 
     //return success message when success
     //catch async error will throw error if query fails,

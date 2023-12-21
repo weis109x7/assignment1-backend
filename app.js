@@ -26,10 +26,11 @@ app.use(express.json());
 import { isAuthenthicated, isAuthorized } from "./middlewares/auth.js";
 
 //import routes from auth controller
-import { login, logout } from "./controllers/authController.js";
+import { login, logout, checkToken } from "./controllers/authController.js";
 //add routes with middleware
 app.post("/api/v1/login", login);
 app.post("/api/v1/logout", isAuthenthicated, logout);
+app.post("/api/v1/checktoken", isAuthenthicated, checkToken);
 
 //import routes from user controller
 import { newUser, getUsers, editUser, updateProfile } from "./controllers/userController.js";

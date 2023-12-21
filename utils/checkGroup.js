@@ -4,7 +4,7 @@ import connection from "./database.js";
 //input params userId=string GroupName=array of string,[string,string]
 export default async function checkGroup(userId, GroupName) {
     //get user data from database
-    const [data, fields] = await connection.execute(`SELECT userGroup FROM accounts WHERE userId="${userId}";`);
+    const [data, fields] = await connection.execute(`SELECT userGroup FROM accounts WHERE userId= ? ;`, [userId]);
 
     if (data.length == 0) {
         return false;

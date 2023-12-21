@@ -18,7 +18,7 @@ export const newGroup = catchAsyncErrors(async (req, res, next) => {
     }
 
     //try to insert data to database
-    const [data, fields] = await connection.execute(`INSERT INTO roles VALUES ("${groupName}");`);
+    const [data, fields] = await connection.execute(`INSERT INTO roles VALUES (?);`, [groupName]);
 
     //return success message when success
     //catch async error will throw error if insert failed
