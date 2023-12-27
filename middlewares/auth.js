@@ -8,12 +8,13 @@ import checkGroup from "../utils/checkGroup.js";
 //handle user authenthicating
 export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
     let token;
-
+    console.log(req.originalUrl);
+    console.log(req.body);
     //if token avaliable put it in token variable
     if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
         token = req.headers.authorization.split(" ")[1];
     }
-
+    console.log(req.headers);
     //token not found return error
     if (!token) {
         return next(new ErrorHandler("Login first to access this resource.", 401));

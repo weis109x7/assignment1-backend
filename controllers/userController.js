@@ -10,7 +10,7 @@ export const newUser = catchAsyncErrors(async (req, res, next) => {
     var { userId, password, email, userGroup, isActive } = req.body;
 
     if (!email) email = null; //if email is blank set value to null
-    if (!(isActive === "active")) isActive = "disabled"; //if isActive is not active set to disabled
+    if (!(isActive === "disabled")) isActive = "active"; //if isActive is not specified as disabled, set to active
 
     //throw error if required terms is null
     if (!userId || !password) {
@@ -114,7 +114,6 @@ export const updateProfile = catchAsyncErrors(async (req, res, next) => {
 export const getUsers = catchAsyncErrors(async (req, res, next) => {
     //get all users in database
     const [data, fields] = await connection.execute(`SELECT userId,email,userGroup,isActive FROM accounts;`);
-
     //return success message when success
     //catch async error will throw error if query failed
     return res.status(200).json({
