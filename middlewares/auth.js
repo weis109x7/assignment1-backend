@@ -14,7 +14,6 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
     if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
         token = req.headers.authorization.split(" ")[1];
     }
-    console.log(req.headers);
     //token not found return error
     if (!token) {
         return next(new ErrorHandler("Login first to access this resource.", 401));
@@ -25,6 +24,9 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
 
     //retrive user data with token userId
     const [data, fields] = await connection.execute(`SELECT userId,email,userGroup,isActive FROM accounts  WHERE userId= ? ;`, [decoded.id]);
+
+    //check status of account
+    if (data[0].isActive == "disabled") return next(new ErrorHandler("Unauthorized. Account disabled", 401));
 
     //token valid but user not found?? return error
     if (data.length == 0) return next(new ErrorHandler("JSON Web token is invalid. Try Again!", 500));

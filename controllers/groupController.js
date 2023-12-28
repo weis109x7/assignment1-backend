@@ -17,6 +17,10 @@ export const newGroup = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("empty field", 400));
     }
 
+    if (groupName.includes(",")) {
+        return next(new ErrorHandler("groupname cannot contain comma ',' ", 400, "ER_CHAR_INVALID"));
+    }
+
     //try to insert data to database
     const [data, fields] = await connection.execute(`INSERT INTO roles VALUES (?);`, [groupName]);
 
@@ -24,7 +28,7 @@ export const newGroup = catchAsyncErrors(async (req, res, next) => {
     //catch async error will throw error if insert failed
     return res.status(200).json({
         success: true,
-        message: data,
+        message: "Sucessfully created group",
     });
 });
 

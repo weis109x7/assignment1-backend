@@ -27,6 +27,8 @@ export const login = catchAsyncErrors(async (req, res, next) => {
     const passMatched = await bcrypt.compare(password, data[0]["password"]);
     //not matched return error
     if (!passMatched) return next(new ErrorHandler("invalid credentials", 401));
+    //check status of account
+    if (data[0].isActive == "disabled") return next(new ErrorHandler("invalid credentials", 401));
 
     // Create JWT Token with unique userId
     const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, {

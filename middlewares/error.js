@@ -9,7 +9,7 @@ export function errorMiddleware(err, req, res, next) {
         res.status(err.statusCode).json({
             success: false,
             error: err,
-            errMessage: err.message,
+            message: err.message,
             stack: err.stack,
         });
     }
@@ -19,7 +19,7 @@ export function errorMiddleware(err, req, res, next) {
         let error = { ...err };
 
         error.message = err.message;
-        // Handle duplicate key error
+        // Handle Could not connect to database
         if (err.code === "ENOTFOUND") {
             const message = "Could not connect to database.";
             error = new ErrorHandler(message, 500);
@@ -40,6 +40,7 @@ export function errorMiddleware(err, req, res, next) {
         res.status(error.statusCode).json({
             success: false,
             message: error.message || "Internal Server Error.",
+            errorCode: err.code || "No Error Code",
         });
     }
 }

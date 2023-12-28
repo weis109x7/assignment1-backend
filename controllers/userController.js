@@ -19,7 +19,7 @@ export const newUser = catchAsyncErrors(async (req, res, next) => {
 
     //throw error if password requirements not fufiled
     if (!passwordChecker(password)) {
-        return next(new ErrorHandler("password needs to be 8-10char and contains alphanumeric and specialcharacter", 400));
+        return next(new ErrorHandler("password needs to be 8-10char and contains alphanumeric and specialcharacter", 400, "ER_PW_INVALID"));
     }
 
     //hash password with bcrypt
@@ -32,7 +32,7 @@ export const newUser = catchAsyncErrors(async (req, res, next) => {
     //catch async error will throw error if insert failed
     return res.status(200).json({
         success: true,
-        message: data,
+        message: "Sucessfully created user",
     });
 });
 
@@ -48,7 +48,7 @@ export const editUser = catchAsyncErrors(async (req, res, next) => {
     if (password) {
         //throw error if password requirements not fufiled
         if (!passwordChecker(password)) {
-            return next(new ErrorHandler("password needs to be 8-10char and contains alphanumeric and specialcharacter", 400));
+            return next(new ErrorHandler("password needs to be 8-10char and contains alphanumeric and specialcharacter", 400, "ER_PW_INVALID"));
         }
         //hash password with bcrypt
         password = await bcrypt.hash(password, 10);
@@ -69,7 +69,7 @@ export const editUser = catchAsyncErrors(async (req, res, next) => {
     //no error if invalid userId???
     return res.status(200).json({
         success: true,
-        message: data,
+        message: "Sucessfully edited user",
     });
 });
 
@@ -85,7 +85,7 @@ export const updateProfile = catchAsyncErrors(async (req, res, next) => {
     if (password) {
         //throw error if password requirements not fufiled
         if (!passwordChecker(password)) {
-            return next(new ErrorHandler("password needs to be 8-10char and contains alphanumeric and specialcharacter", 400));
+            return next(new ErrorHandler("password needs to be 8-10char and contains alphanumeric and specialcharacter", 400, "ER_PW_INVALID"));
         }
         //hash password with bcrypt
         password = await bcrypt.hash(password, 10);
@@ -106,7 +106,7 @@ export const updateProfile = catchAsyncErrors(async (req, res, next) => {
     //no error if invalid userId???
     return res.status(200).json({
         success: true,
-        message: data,
+        message: "sucessfully updated own profile",
     });
 });
 
