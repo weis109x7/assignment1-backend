@@ -16,7 +16,7 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
     }
     //token not found return error
     if (!token) {
-        return next(new ErrorHandler("Login first to access this resource.", 401));
+        return next(new ErrorHandler("Login first to access this resource.", 401, "ER_NOT_LOGIN"));
     }
 
     //check token validity
@@ -26,10 +26,10 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
     const [data, fields] = await connection.execute(`SELECT userId,email,userGroup,isActive FROM accounts  WHERE userId= ? ;`, [decoded.id]);
 
     //check status of account
-    if (data[0].isActive == "disabled") return next(new ErrorHandler("Unauthorized. Account disabled", 401));
+    if (data[0].isActive == "disabled") return next(new ErrorHandler("Unauthorized. Account disabled", 401, "ER_NOT_LOGIN"));
 
     //token valid but user not found?? return error
-    if (data.length == 0) return next(new ErrorHandler("JSON Web token is invalid. Try Again!", 500));
+    if (data.length == 0) return next(new ErrorHandler("JSON Web token is invalid. Try Again!", 500, "ER_JWT_INVALID"));
 
     data[0].token = token; //add token to user data
     //store user data in req.user for next middleware to use
@@ -45,7 +45,7 @@ export const isAuthorized = (...groups) => {
         var authorized = await checkGroup(req.user["userId"], groups);
         //if authorized =false means user not allowed
         if (!authorized) {
-            return next(new ErrorHandler(`Role(${req.user["userGroup"]}) is not allowed to access this resource.`, 403));
+            return next(new ErrorHandler(`Role(${req.user["userGroup"]}) is not allowed to access this resource.`, 403, "ER_NOT_LOGIN"));
         }
 
         next();

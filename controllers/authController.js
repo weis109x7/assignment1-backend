@@ -16,19 +16,19 @@ export const login = catchAsyncErrors(async (req, res, next) => {
 
     //error if null
     if (!userId || !password) {
-        return next(new ErrorHandler("invalid credentials", 401));
+        return next(new ErrorHandler("invalid credentials", 401, "ER_INVALID_CREDEN"));
     }
 
     //look in db for account and retrive passhash to compare
     const [data, fields] = await connection.execute(`SELECT * FROM accounts  WHERE userId=?;`, [userId]);
     //no user found
-    if (data.length == 0) return next(new ErrorHandler("invalid credentials", 401));
+    if (data.length == 0) return next(new ErrorHandler("invalid credentials", 401, "ER_INVALID_CREDEN"));
     //check password match
     const passMatched = await bcrypt.compare(password, data[0]["password"]);
     //not matched return error
-    if (!passMatched) return next(new ErrorHandler("invalid credentials", 401));
+    if (!passMatched) return next(new ErrorHandler("invalid credentials", 401, "ER_INVALID_CREDEN"));
     //check status of account
-    if (data[0].isActive == "disabled") return next(new ErrorHandler("invalid credentials", 401));
+    if (data[0].isActive == "disabled") return next(new ErrorHandler("invalid credentials", 401, "ER_INVALID_CREDEN"));
 
     // Create JWT Token with unique userId
     const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, {

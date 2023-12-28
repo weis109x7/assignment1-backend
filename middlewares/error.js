@@ -27,14 +27,14 @@ export function errorMiddleware(err, req, res, next) {
 
         // Handling Wrong JWT token error
         if (err.name === "JsonWebTokenError") {
-            const message = "JSON Web token is invalid. Try Again!";
-            error = new ErrorHandler(message, 500);
+            const message = "JSON Web token is invalid. Please Login again!";
+            error = new ErrorHandler(message, 500, "ER_JWT_INVALID");
         }
 
         // Handling Expired JWT token error
         if (err.name === "TokenExpiredError") {
-            const message = "JSON Web token is expired. Try Again!";
-            error = new ErrorHandler(message, 500);
+            const message = "JSON Web token is invalid. Please Login again!";
+            error = new ErrorHandler(message, 500, "ER_JWT_INVALID");
         }
 
         res.status(error.statusCode).json({
