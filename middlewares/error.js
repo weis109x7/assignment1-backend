@@ -40,7 +40,7 @@ export function errorMiddleware(err, req, res, next) {
         res.status(error.statusCode).json({
             success: false,
             message: error.message || "Internal Server Error.",
-            errorCode: err.code || "No Error Code",
+            errorCode: error.code || "No Error Code",
         });
     }
 }
