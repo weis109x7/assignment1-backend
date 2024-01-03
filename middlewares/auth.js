@@ -25,7 +25,7 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
     const [data, fields] = await connection.execute(`SELECT userId,email,userGroup,isActive FROM accounts  WHERE userId= ? ;`, [decoded.id]);
 
     //check status of account
-    if (data[0].isActive == "disabled") return next(new ErrorHandler("Unauthorized. Account disabled", 401, "ER_NOT_LOGIN"));
+    if (data[0].isActive == "disabled") return next(new ErrorHandler("Login first to access this resource", 401, "ER_NOT_LOGIN"));
 
     //token valid but user not found?? return error
     if (data.length == 0) return next(new ErrorHandler("JSON Web token is invalid. Please Login again", 500, "ER_JWT_INVALID"));
