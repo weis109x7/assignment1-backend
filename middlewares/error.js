@@ -6,10 +6,12 @@ export function errorMiddleware(err, req, res, next) {
 
     //dev error message show stacktrace for everything
     if (process.env.NODE_ENV === "development") {
-        res.status(err.statusCode).json({
+        let error = { ...err };
+        error.message = err.message;
+        res.status(error.statusCode).json({
             success: false,
-            error: err,
-            message: err.message,
+            message: error.message || "Internal Server Error.",
+            errorCode: error.code || "No Error Code",
             stack: err.stack,
         });
     }
