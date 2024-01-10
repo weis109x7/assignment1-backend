@@ -8,7 +8,7 @@ import connection from "../utils/database.js";
 export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
     let token;
     console.log(req.originalUrl);
-    console.log(req.body);
+
     //if token avaliable put it in token variable
     if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
         token = req.headers.authorization.split(" ")[1];
@@ -19,6 +19,7 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
     }
 
     //check token validity
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     //retrive user data with token userId
@@ -30,7 +31,9 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
     //token valid but user not found?? return error
     if (data.length == 0) return next(new ErrorHandler("JSON Web token is invalid. Please Login again", 500, "ER_JWT_INVALID"));
 
-    data[0].token = token; //add token to user data
+    //convert userGroup from comma seperated to array
+    data[0]["userGroup"] = data[0]["userGroup"] ? data[0]["userGroup"].split(",") : [];
+
     //store user data in req.user for next middleware to use
     //req.user contains userId,email,userGroup,isActive and token
     req.user = data[0];
@@ -41,7 +44,7 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
 // handling users roles
 export const isAuthorized = (...groups) => {
     return catchAsyncErrors(async (req, res, next) => {
-        var authorized = await checkGroup(req.user["userId"], groups);
+        var authorized = await Checkgroup(req.user["userId"], groups);
         //if authorized =false means user not allowed
         if (!authorized) {
             return next(new ErrorHandler(`Role(${req.user["userGroup"]}) is not allowed to access this resource.`, 403, "ER_NOT_LOGIN"));
@@ -53,9 +56,9 @@ export const isAuthorized = (...groups) => {
 
 //will return true if any group matches
 //input params userId=string GroupName=array of string,[string,string]
-async function checkGroup(userId, GroupName) {
+export async function Checkgroup(userid, groupname) {
     //get user data from database
-    const [data, fields] = await connection.execute(`SELECT userGroup FROM accounts WHERE userId= ? ;`, [userId]);
+    const [data, fields] = await connection.execute(`SELECT userGroup FROM accounts WHERE userId= ? ;`, [userid]);
 
     if (data.length == 0) {
         return false;
@@ -64,8 +67,9 @@ async function checkGroup(userId, GroupName) {
     //get current user groups
     const userGroup = data[0]["userGroup"].split(",");
     //get intersection of user group and allowed group to see if user is authorized
-    const authorizedGroup = GroupName.filter((value) => userGroup.includes(value));
+    const authorizedGroup = groupname.filter((value) => userGroup.includes(value));
 
+    console.log(authorizedGroup);
     //if len>0 means user is authorized
     if (authorizedGroup.length > 0) {
         return true;

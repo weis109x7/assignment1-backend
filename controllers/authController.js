@@ -4,6 +4,7 @@ import ErrorHandler from "../utils/errorHandler.js";
 import bcrypt from "bcryptjs";
 import catchAsyncErrors from "../middlewares/catchAsyncErrors.js";
 import jwt from "jsonwebtoken";
+import { Checkgroup } from "../middlewares/auth.js";
 
 //load config
 import dotenv from "dotenv";
@@ -20,7 +21,7 @@ export const login = catchAsyncErrors(async (req, res, next) => {
     }
 
     //look in db for account and retrive passhash to compare
-    const [data, fields] = await connection.execute(`SELECT * FROM accounts  WHERE userId=?;`, [userId]);
+    const [data, fields] = await connection.execute(`SELECT userId,password,email,userGroup,isActive FROM accounts  WHERE userId=?;`, [userId]);
     //no user found
     if (data.length == 0) return next(new ErrorHandler("invalid credentials", 401, "ER_INVALID_CREDEN"));
     //check password match
@@ -37,6 +38,8 @@ export const login = catchAsyncErrors(async (req, res, next) => {
 
     //remove password from user data, add token to user data
     delete data[0].password;
+    //convert userGroup from comma seperated to array
+    data[0]["userGroup"] = data[0]["userGroup"] ? data[0]["userGroup"].split(",") : [];
     data[0].token = token;
 
     //return token and user data(w/o password) as response
@@ -51,6 +54,19 @@ export const checkToken = catchAsyncErrors(async (req, res, next) => {
         success: true,
         user: req.user,
     });
+});
+
+export const checkGroup = catchAsyncErrors(async (req, res, next) => {
+    const cont = await Checkgroup(req.user["userId"], [req.body.group]);
+    console.log(cont);
+    if (cont) {
+        res.status(200).json({
+            success: true,
+            message: `${req.user["userId"]} is part of ${req.body.group} group`,
+        });
+    } else {
+        return next(new ErrorHandler(`Role(${req.user["userGroup"]}) is not part of ${req.body.group} group.`, 403, "ER_NOT_ALLOWED"));
+    }
 });
 
 // Logout user

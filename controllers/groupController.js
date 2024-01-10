@@ -17,8 +17,8 @@ export const newGroup = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("empty field", 400));
     }
 
-    if (groupName.includes(",")) {
-        return next(new ErrorHandler("groupname cannot contain comma ',' ", 400, "ER_CHAR_INVALID"));
+    if (!groupnameChecker(groupName)) {
+        return next(new ErrorHandler("Groupname must not contain special characters, only contain letters or letters and numbers and must be <45 char ", 400, "ER_CHAR_INVALID"));
     }
 
     //try to insert data to database
@@ -44,3 +44,10 @@ export const getGroups = catchAsyncErrors(async (req, res, next) => {
         message: data,
     });
 });
+
+//password checker function to make sure password fufils requirement
+function groupnameChecker(groupname) {
+    //regex matches 8-10 char with alphanumeric with special character
+    const regex = new RegExp(/^(?=.*[a-zA-Z])[a-zA-Z0-9]{1,45}$/);
+    return regex.test(groupname);
+}
