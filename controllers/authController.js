@@ -12,16 +12,16 @@ dotenv.config({ path: "./config/config.env" });
 
 //login api
 export const login = catchAsyncErrors(async (req, res, next) => {
-    //get userId and password from req body
-    const { userId, password } = req.body;
+    //get username and password from req body
+    const { username, password } = req.body;
 
     //error if null
-    if (!userId || !password) {
+    if (!username || !password) {
         return next(new ErrorHandler("invalid credentials", 401, "ER_INVALID_CREDEN"));
     }
 
     //look in db for account and retrive passhash to compare
-    const [data, fields] = await connection.execute(`SELECT userId,password,email,userGroup,isActive FROM accounts  WHERE userId=?;`, [userId]);
+    const [data, fields] = await connection.execute(`SELECT username,password,email,groupname,isactive FROM accounts  WHERE username=?;`, [username]);
     //no user found
     if (data.length == 0) return next(new ErrorHandler("invalid credentials", 401, "ER_INVALID_CREDEN"));
     //check password match
@@ -29,17 +29,17 @@ export const login = catchAsyncErrors(async (req, res, next) => {
     //not matched return error
     if (!passMatched) return next(new ErrorHandler("invalid credentials", 401, "ER_INVALID_CREDEN"));
     //check status of account
-    if (data[0].isActive == "disabled") return next(new ErrorHandler("invalid credentials", 401, "ER_INVALID_CREDEN"));
+    if (data[0].isactive == "disabled") return next(new ErrorHandler("invalid credentials", 401, "ER_INVALID_CREDEN"));
 
-    // Create JWT Token with unique userId
-    const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    // Create JWT Token with unique username
+    const token = jwt.sign({ id: username }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_TIME,
     });
 
     //remove password from user data, add token to user data
     delete data[0].password;
-    //convert userGroup from comma seperated to array
-    data[0]["userGroup"] = data[0]["userGroup"] ? data[0]["userGroup"].split(",") : [];
+    //convert groupname from comma seperated to array
+    data[0]["groupname"] = data[0]["groupname"] ? data[0]["groupname"].split(",") : [];
     data[0].token = token;
 
     //return token and user data(w/o password) as response
@@ -57,15 +57,15 @@ export const checkToken = catchAsyncErrors(async (req, res, next) => {
 });
 
 export const checkGroup = catchAsyncErrors(async (req, res, next) => {
-    const cont = await Checkgroup(req.user["userId"], [req.body.group]);
+    const cont = await Checkgroup(req.user["username"], [req.body.group]);
     console.log(cont);
     if (cont) {
         res.status(200).json({
             success: true,
-            message: `${req.user["userId"]} is part of ${req.body.group} group`,
+            message: `${req.user["username"]} is part of ${req.body.group} group`,
         });
     } else {
-        return next(new ErrorHandler(`Role(${req.user["userGroup"]}) is not part of ${req.body.group} group.`, 403, "ER_NOT_ALLOWED"));
+        return next(new ErrorHandler(`Role(${req.user["groupname"]}) is not part of ${req.body.group} group.`, 403, "ER_NOT_ALLOWED"));
     }
 });
 

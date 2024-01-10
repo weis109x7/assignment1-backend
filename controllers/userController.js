@@ -7,13 +7,13 @@ import catchAsyncErrors from "../middlewares/catchAsyncErrors.js";
 //newUser api
 export const newUser = catchAsyncErrors(async (req, res, next) => {
     //get user details from req body
-    var { userId, password, email, userGroup, isActive } = req.body;
+    var { username, password, email, groupname, isactive } = req.body;
 
     if (!email) email = null; //if email is blank set value to null
-    if (!(isActive === "disabled")) isActive = "active"; //if isActive is not specified as disabled, set to active
+    if (!(isactive === "disabled")) isactive = "active"; //if isactive is not specified as disabled, set to active
 
     //throw error if required terms is null
-    if (!userId || !password) {
+    if (!username || !password) {
         return next(new ErrorHandler("empty username/password fields", 400));
     }
 
@@ -26,7 +26,7 @@ export const newUser = catchAsyncErrors(async (req, res, next) => {
     const hashedpassword = await bcrypt.hash(password, 10);
 
     //try to insert data to database
-    const [data, fields] = await connection.execute(`INSERT INTO accounts VALUES (?,?,?,?,?);`, [userId, hashedpassword, email, userGroup, isActive]);
+    const [data, fields] = await connection.execute(`INSERT INTO accounts VALUES (?,?,?,?,?);`, [username, hashedpassword, email, groupname, isactive]);
 
     //return success message when success
     //catch async error will throw error if insert failed
@@ -39,10 +39,10 @@ export const newUser = catchAsyncErrors(async (req, res, next) => {
 //editUser api
 export const editUser = catchAsyncErrors(async (req, res, next) => {
     //get user details from req body
-    var { userId, password, email, userGroup, isActive } = req.body;
+    var { username, password, email, groupname, isactive } = req.body;
 
     if (!email) email = null; //if email is blank set value to null
-    if (!(isActive === "active")) isActive = "disabled"; //if isActive is not active set to disabled
+    if (!(isactive === "active")) isactive = "disabled"; //if isactive is not active set to disabled
 
     //if password provided
     if (password) {
@@ -60,13 +60,13 @@ export const editUser = catchAsyncErrors(async (req, res, next) => {
     //try to edit data of database
     const [data, fields] = await connection.execute(
         //if password==null then use old password database value, if email==null then set null in database
-        `UPDATE accounts SET email = ? ,userGroup = ?, isActive = ? ,password= COALESCE(?,password) WHERE userId=?;`,
-        [email, userGroup, isActive, password, userId]
+        `UPDATE accounts SET email = ? ,groupname = ?, isactive = ? ,password= COALESCE(?,password) WHERE username=?;`,
+        [email, groupname, isactive, password, username]
     );
 
     //return success message when success
     //catch async error will throw error if query fails,
-    //no error if invalid userId???
+    //no error if invalid username???
     return res.status(200).json({
         success: true,
         message: "Sucessfully edited user",
@@ -76,7 +76,7 @@ export const editUser = catchAsyncErrors(async (req, res, next) => {
 //updateprofile for self api
 export const updateProfile = catchAsyncErrors(async (req, res, next) => {
     //get user details from req body
-    const userId = req.user["userId"];
+    const username = req.user["username"];
     var { password, email } = req.body;
 
     if (!email) email = null; //if email is blank set value to null
@@ -97,13 +97,13 @@ export const updateProfile = catchAsyncErrors(async (req, res, next) => {
     //try to edit data of database
     const [data, fields] = await connection.execute(
         //if password==null then use old password database value, if email==null then set null in database
-        `UPDATE accounts SET email = ?,password= COALESCE(?,password) WHERE userId=?;`,
-        [email, password, userId]
+        `UPDATE accounts SET email = ?,password= COALESCE(?,password) WHERE username=?;`,
+        [email, password, username]
     );
 
     //return success message when success
     //catch async error will throw error if query fails,
-    //no error if invalid userId???
+    //no error if invalid username???
     return res.status(200).json({
         success: true,
         message: "sucessfully updated own profile",
@@ -114,7 +114,7 @@ export const updateProfile = catchAsyncErrors(async (req, res, next) => {
 //get all users
 export const getUsers = catchAsyncErrors(async (req, res, next) => {
     //get all users in database
-    const [data, fields] = await connection.execute(`SELECT userId,email,userGroup,isActive FROM accounts;`);
+    const [data, fields] = await connection.execute(`SELECT username,email,groupname,isactive FROM accounts;`);
     //return success message when success
     //catch async error will throw error if query failed
     return res.status(200).json({

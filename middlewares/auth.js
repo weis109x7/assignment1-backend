@@ -22,20 +22,20 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    //retrive user data with token userId
-    const [data, fields] = await connection.execute(`SELECT userId,email,userGroup,isActive FROM accounts  WHERE userId= ? ;`, [decoded.id]);
+    //retrive user data with token username
+    const [data, fields] = await connection.execute(`SELECT username,email,groupname,isactive FROM accounts  WHERE username= ? ;`, [decoded.id]);
 
     //check status of account
-    if (data[0].isActive == "disabled") return next(new ErrorHandler("Login first to access this resource", 401, "ER_NOT_LOGIN"));
+    if (data[0].isactive == "disabled") return next(new ErrorHandler("Login first to access this resource", 401, "ER_NOT_LOGIN"));
 
     //token valid but user not found?? return error
     if (data.length == 0) return next(new ErrorHandler("JSON Web token is invalid. Please Login again", 500, "ER_JWT_INVALID"));
 
-    //convert userGroup from comma seperated to array
-    data[0]["userGroup"] = data[0]["userGroup"] ? data[0]["userGroup"].split(",") : [];
+    //convert groupname from comma seperated to array
+    data[0]["groupname"] = data[0]["groupname"] ? data[0]["groupname"].split(",") : [];
 
     //store user data in req.user for next middleware to use
-    //req.user contains userId,email,userGroup,isActive and token
+    //req.user contains username,email,groupname,isactive and token
     req.user = data[0];
 
     next();
@@ -44,10 +44,10 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
 // handling users roles
 export const isAuthorized = (...groups) => {
     return catchAsyncErrors(async (req, res, next) => {
-        var authorized = await Checkgroup(req.user["userId"], groups);
+        var authorized = await Checkgroup(req.user["username"], groups);
         //if authorized =false means user not allowed
         if (!authorized) {
-            return next(new ErrorHandler(`Role(${req.user["userGroup"]}) is not allowed to access this resource.`, 403, "ER_NOT_LOGIN"));
+            return next(new ErrorHandler(`Role(${req.user["groupname"]}) is not allowed to access this resource.`, 403, "ER_NOT_LOGIN"));
         }
 
         next();
@@ -58,14 +58,14 @@ export const isAuthorized = (...groups) => {
 //input params userId=string GroupName=array of string,[string,string]
 export async function Checkgroup(userid, groupname) {
     //get user data from database
-    const [data, fields] = await connection.execute(`SELECT userGroup FROM accounts WHERE userId= ? ;`, [userid]);
+    const [data, fields] = await connection.execute(`SELECT groupname FROM accounts WHERE username= ? ;`, [userid]);
 
     if (data.length == 0) {
         return false;
     }
 
     //get current user groups
-    const userGroup = data[0]["userGroup"].split(",");
+    const userGroup = data[0]["groupname"].split(",");
     //get intersection of user group and allowed group to see if user is authorized
     const authorizedGroup = groupname.filter((value) => userGroup.includes(value));
 
