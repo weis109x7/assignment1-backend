@@ -49,7 +49,21 @@ app.post("/api/v1/user/update", isAuthenthicated, updateProfile);
 import { getGroups, newGroup } from "./controllers/groupController.js";
 //add routes with middlewares
 app.post("/api/v1/group/new", isAuthenthicated, isAuthorized("admin"), newGroup);
-app.post("/api/v1/group/getgroups", isAuthenthicated, isAuthorized("admin"), getGroups);
+app.post("/api/v1/group/getgroups", isAuthenthicated, isAuthorized("admin", "projectlead"), getGroups);
+
+//import routes from app controller
+import { getApps, newApp, editApp } from "./controllers/appController.js";
+//add routes with middlewares
+app.post("/api/v1/app/getapps", isAuthenthicated, getApps);
+app.post("/api/v1/app/new", isAuthenthicated, isAuthorized("projectlead"), newApp);
+app.post("/api/v1/app/edit", isAuthenthicated, isAuthorized("projectlead"), editApp);
+
+//import routes from plans controller
+import { getPlans, newPlan, editPlan } from "./controllers/planController.js";
+//add routes with middlewares
+app.post("/api/v1/plan/getplans", isAuthenthicated, getPlans);
+app.post("/api/v1/plan/new", isAuthenthicated, newPlan); //auth done in route level
+app.post("/api/v1/plan/edit", isAuthenthicated, editPlan); //auth done in route level
 
 // Handle unhandled routes
 app.all("*", (req, res, next) => {

@@ -19,7 +19,6 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
     }
 
     //check token validity
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     //retrive user data with token username
@@ -49,7 +48,6 @@ export const isAuthorized = (...groups) => {
         if (!authorized) {
             return next(new ErrorHandler(`Role(${req.user["groupname"]}) is not allowed to access this resource.`, 403, "ER_NOT_LOGIN"));
         }
-
         next();
     });
 };
@@ -69,7 +67,6 @@ export async function Checkgroup(userid, groupname) {
     //get intersection of user group and allowed group to see if user is authorized
     const authorizedGroup = groupname.filter((value) => userGroup.includes(value));
 
-    console.log(authorizedGroup);
     //if len>0 means user is authorized
     if (authorizedGroup.length > 0) {
         return true;

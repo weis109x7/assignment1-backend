@@ -64,6 +64,9 @@ export const editUser = catchAsyncErrors(async (req, res, next) => {
         [email, groupname, isactive, password, username]
     );
 
+    //check result of update
+    if (data.affectedRows == 0) return next(new ErrorHandler(`No Username called ${username}`, 400, "ER_FIELD_INVALID"));
+
     //return success message when success
     //catch async error will throw error if query fails,
     //no error if invalid username???
@@ -100,6 +103,9 @@ export const updateProfile = catchAsyncErrors(async (req, res, next) => {
         `UPDATE accounts SET email = ?,password= COALESCE(?,password) WHERE username=?;`,
         [email, password, username]
     );
+
+    //check result of update
+    if (data.affectedRows == 0) return next(new ErrorHandler(`No Username called ${username}`, 400, "ER_FIELD_INVALID"));
 
     //return success message when success
     //catch async error will throw error if query fails,
