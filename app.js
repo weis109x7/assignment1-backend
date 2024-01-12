@@ -65,6 +65,13 @@ app.post("/api/v1/plan/getplans", isAuthenthicated, getPlans);
 app.post("/api/v1/plan/new", isAuthenthicated, newPlan); //auth done in route level
 app.post("/api/v1/plan/edit", isAuthenthicated, editPlan); //auth done in route level
 
+//import routes from tasks controller
+import { getTasks, newTask, editTask } from "./controllers/taskController.js";
+//add routes with middlewares
+app.post("/api/v1/task/gettasks", isAuthenthicated, getTasks);
+app.post("/api/v1/task/new", isAuthenthicated, newTask); //auth done in route level
+app.post("/api/v1/task/edit", isAuthenthicated, editTask); //auth done in route level
+
 // Handle unhandled routes
 app.all("*", (req, res, next) => {
     next(new ErrorHandler(`${req.originalUrl} route not found`, 404));
