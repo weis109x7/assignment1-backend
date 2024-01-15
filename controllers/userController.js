@@ -21,6 +21,10 @@ export const newUser = catchAsyncErrors(async (req, res, next) => {
     if (!passwordChecker(password)) {
         return next(new ErrorHandler("password needs to be 8-10char and contains alphanumeric and specialcharacter", 400, "ER_PW_INVALID"));
     }
+    //throw error if password requirements not fufiled
+    if (!usernameChecker(username)) {
+        return next(new ErrorHandler("Username needs to be word or word+digits with <=45 char with no special character", 400, "ER_PW_INVALID"));
+    }
 
     //hash password with bcrypt
     const hashedpassword = await bcrypt.hash(password, 10);
@@ -134,4 +138,11 @@ function passwordChecker(password) {
     //regex matches 8-10 char with alphanumeric with special character
     const regex = new RegExp(/^(?=.*[A-Za-z0-9])(?=.*[^A-Za-z0-9]).{8,10}$/);
     return regex.test(password);
+}
+
+//reges checker function to make sure input fufils requirement
+function usernameChecker(input) {
+    //regex matches <=45 char with no special character, word or word+digits
+    const regex = new RegExp(/^(?=.*[a-zA-Z])[a-zA-Z0-9]{1,45}$/);
+    return regex.test(input);
 }

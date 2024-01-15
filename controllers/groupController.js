@@ -45,9 +45,9 @@ export const getGroups = catchAsyncErrors(async (req, res, next) => {
     });
 });
 
-//password checker function to make sure password fufils requirement
+//reges checker function to make sure input fufils requirement
 function groupnameChecker(groupname) {
-    //regex matches 8-10 char with alphanumeric with special character
+    //regex matches <=45 char with no special character, word or word+digits
     const regex = new RegExp(/^(?=.*[a-zA-Z])[a-zA-Z0-9]{1,45}$/);
     return regex.test(groupname);
 }
