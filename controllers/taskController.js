@@ -55,6 +55,10 @@ export const newTask = catchAsyncErrors(async (req, res, next) => {
     //get number from database app r number
     var task_id = `${task_app_acronym}_${dataPermit[0]["app_rnumber"] + 1}`;
 
+    var today = new Date(Date.now());
+    //append audit trail to notes
+    task_notes = `\n-------------------------------------------------------------\nTask Created by ${req.user["username"]} on\n${today}\nNotes following ---------------------------------------------\n${task_notes}`;
+
     //try to insert data to database
     const [data, fields] = await connection.execute(`INSERT INTO tasks VALUES (?,?,?,?,?,?,?,?,?,?);`, [task_name, task_id, task_description, task_status, task_creator, task_owner, task_createdate, task_notes, task_plan, task_app_acronym]);
 
