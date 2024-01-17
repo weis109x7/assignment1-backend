@@ -5,14 +5,26 @@ import catchAsyncErrors from "../middlewares/catchAsyncErrors.js";
 
 //get all apps
 export const getApps = catchAsyncErrors(async (req, res, next) => {
-    //get all apps in database
-    const [data, fields] = await connection.execute(`SELECT * FROM applications;`);
-    //return success message when success
-    //catch async error will throw error if query failed
-    return res.status(200).json({
-        success: true,
-        message: data,
-    });
+    //if app_acronym provided in body then get specific ap else get all apps
+    const { app_acronym } = req.body;
+    if (app_acronym) {
+        const [data, fields] = await connection.execute(`SELECT * FROM applications WHERE app_acronym=?;`, [app_acronym]);
+        //return success message when success
+        //catch async error will throw error if query failed
+        return res.status(200).json({
+            success: true,
+            message: data,
+        });
+    } else {
+        //get all apps in database
+        const [data, fields] = await connection.execute(`SELECT * FROM applications;`);
+        //return success message when success
+        //catch async error will throw error if query failed
+        return res.status(200).json({
+            success: true,
+            message: data,
+        });
+    }
 });
 
 //newUser api

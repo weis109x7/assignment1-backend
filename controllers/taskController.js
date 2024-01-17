@@ -22,9 +22,11 @@ export const getTasks = catchAsyncErrors(async (req, res, next) => {
 //new task api
 export const newTask = catchAsyncErrors(async (req, res, next) => {
     // get task details from req body
-    var { task_name, task_description, task_creator, task_createdate, task_notes, task_plan, task_app_acronym } = req.body;
+    var { task_name, task_description, task_notes, task_plan, task_app_acronym } = req.body;
+    const task_creator = req.user["username"];
     const task_owner = task_creator;
     const task_status = "open";
+    const task_createdate = Math.floor(Date.now() / 1000);
 
     //field check
     //no special char, <45 char, word or word+numeric
