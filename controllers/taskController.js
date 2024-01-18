@@ -6,10 +6,10 @@ import { Checkgroup } from "../middlewares/auth.js";
 
 //get all Tasks for current plan/app
 export const getTasks = catchAsyncErrors(async (req, res, next) => {
-    const { task_plan, task_app_acronym } = req.body;
+    const { task_app_acronym } = req.body;
 
-    //get all task in database for respective app and plan
-    const [data, fields] = await connection.execute(`SELECT * FROM tasks WHERE task_plan=? AND task_app_acronym= ? ;`, [task_plan, task_app_acronym]);
+    //get all task in database for respective app
+    const [data, fields] = await connection.execute(`SELECT * FROM tasks WHERE task_app_acronym= ? ;`, [task_app_acronym]);
 
     //return success message when success
     //catch async error will throw error if query failed

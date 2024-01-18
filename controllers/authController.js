@@ -57,15 +57,57 @@ export const checkToken = catchAsyncErrors(async (req, res, next) => {
 });
 
 export const checkGroup = catchAsyncErrors(async (req, res, next) => {
-    const cont = await Checkgroup(req.user["username"], [req.body.group]);
-    console.log(cont);
-    if (cont) {
+    const gorupToCheck = req.body.group;
+
+    const checkGroupResult = await Checkgroup(req.user["username"], [gorupToCheck]);
+    if (checkGroupResult) {
         res.status(200).json({
             success: true,
-            message: `${req.user["username"]} is part of ${req.body.group} group`,
+            message: `${req.user["username"]} is part of ${gorupToCheck} group`,
         });
     } else {
-        return next(new ErrorHandler(`Role(${req.user["groupname"]}) is not part of ${req.body.group} group.`, 403, "ER_NOT_ALLOWED"));
+        return next(new ErrorHandler(`Role(${req.user["groupname"]}) is not part of ${gorupToCheck} group.`, 403, "ER_NOT_ALLOWED"));
+    }
+});
+
+export const checkAppPermit = catchAsyncErrors(async (req, res, next) => {
+    const appName = req.body.appName;
+    const perms_state = req.body.perms_state;
+    var query = "";
+    switch (perms_state) {
+        case "create":
+            query = `SELECT app_permit_create FROM applications  WHERE app_acronym= ? ;`;
+            break;
+        case "open":
+            query = `SELECT app_permit_open FROM applications  WHERE app_acronym= ? ;`;
+            break;
+        case "todo":
+            query = `SELECT app_permit_todolist FROM applications  WHERE app_acronym= ? ;`;
+            break;
+        case "doing":
+            query = `SELECT app_permit_doing FROM applications  WHERE app_acronym= ? ;`;
+            break;
+        case "done":
+            query = `SELECT app_permit_done FROM applications  WHERE app_acronym= ? ;`;
+            break;
+        default:
+            return next(new ErrorHandler(`invalid task state???`, 400, "ER_FIELD_INVALID"));
+    }
+
+    //check permit to act on task with state, from application table column "app_permit_?"
+    let [dataPermit, field1] = await connection.execute(query, [appName]);
+    if (dataPermit.length == 0) return next(new ErrorHandler(`invalid app name???`, 400, "ER_FIELD_INVALID"));
+    const permittedRole = Object.values(dataPermit[0])[0];
+
+    const gorupToCheck = permittedRole;
+    const checkGroupResult = await Checkgroup(req.user["username"], [gorupToCheck]);
+    if (checkGroupResult) {
+        res.status(200).json({
+            success: true,
+            message: `${req.user["username"]} is part of ${gorupToCheck} group`,
+        });
+    } else {
+        return next(new ErrorHandler(`Role(${req.user["groupname"]}) is not part of ${gorupToCheck} group.`, 403, "ER_NOT_ALLOWED"));
     }
 });
 

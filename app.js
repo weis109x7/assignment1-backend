@@ -30,12 +30,13 @@ app.use(express.json());
 import { isAuthenthicated, isAuthorized } from "./middlewares/auth.js";
 
 //import routes from auth controller
-import { login, logout, checkToken, checkGroup } from "./controllers/authController.js";
+import { login, logout, checkToken, checkGroup, checkAppPermit } from "./controllers/authController.js";
 //add routes with middleware
 app.post("/api/v1/login", login);
 app.post("/api/v1/logout", isAuthenthicated, logout);
 app.post("/api/v1/checktoken", isAuthenthicated, checkToken);
 app.post("/api/v1/checkgroup", isAuthenthicated, checkGroup);
+app.post("/api/v1/checkappperms", isAuthenthicated, checkAppPermit);
 
 //import routes from user controller
 import { newUser, getUsers, editUser, updateProfile } from "./controllers/userController.js";
