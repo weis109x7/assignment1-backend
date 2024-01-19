@@ -90,6 +90,11 @@ export const checkAppPermit = catchAsyncErrors(async (req, res, next) => {
         case "done":
             query = `SELECT app_permit_done FROM applications  WHERE app_acronym= ? ;`;
             break;
+        case "closed":
+            return res.status(200).json({
+                success: false,
+                message: "cant act on closed state",
+            });
         default:
             return next(new ErrorHandler(`invalid task state???`, 400, "ER_FIELD_INVALID"));
     }

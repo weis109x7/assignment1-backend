@@ -24,11 +24,11 @@ export const isAuthenthicated = catchAsyncErrors(async (req, res, next) => {
     //retrive user data with token username
     const [data, fields] = await connection.execute(`SELECT username,email,groupname,isactive FROM accounts  WHERE username= ? ;`, [decoded.id]);
 
-    //check status of account
-    if (data[0].isactive == "disabled") return next(new ErrorHandler("Login first to access this resource", 401, "ER_NOT_LOGIN"));
-
     //token valid but user not found?? return error
     if (data.length == 0) return next(new ErrorHandler("JSON Web token is invalid. Please Login again", 500, "ER_JWT_INVALID"));
+
+    //check status of account
+    if (data[0].isactive == "disabled") return next(new ErrorHandler("Login first to access this resource", 401, "ER_NOT_LOGIN"));
 
     //convert groupname from comma seperated to array
     data[0]["groupname"] = data[0]["groupname"] ? data[0]["groupname"].split(",") : [];

@@ -4,12 +4,27 @@ import ErrorHandler from "../utils/errorHandler.js";
 import catchAsyncErrors from "../middlewares/catchAsyncErrors.js";
 import { Checkgroup } from "../middlewares/auth.js";
 
-//get all Tasks for current plan/app
+//get all Tasks for current app
 export const getTasks = catchAsyncErrors(async (req, res, next) => {
     const { task_app_acronym } = req.body;
 
     //get all task in database for respective app
     const [data, fields] = await connection.execute(`SELECT * FROM tasks WHERE task_app_acronym= ? ;`, [task_app_acronym]);
+
+    //return success message when success
+    //catch async error will throw error if query failed
+    return res.status(200).json({
+        success: true,
+        message: data,
+    });
+});
+
+//get Tasks by ID
+export const getTaskByID = catchAsyncErrors(async (req, res, next) => {
+    const { task_id } = req.body;
+
+    //get all task in database for respective app
+    const [data, fields] = await connection.execute(`SELECT * FROM tasks WHERE task_id= ? ;`, [task_id]);
 
     //return success message when success
     //catch async error will throw error if query failed
@@ -59,7 +74,7 @@ export const newTask = catchAsyncErrors(async (req, res, next) => {
 
     var today = new Date(Date.now());
     //append audit trail to notes
-    task_notes = `\n-------------------------------------------------------------\nTask Created by ${req.user["username"]} on\n${today}\nNotes following ---------------------------------------------\n${task_notes}`;
+    task_notes = `\n----------------------------------------------------------------------\nTask Created by ${req.user["username"]} on\n${today}\n########## -----NOTES----- ##########\n${task_notes}\n`;
 
     //try to insert data to database
     const [data, fields] = await connection.execute(`INSERT INTO tasks VALUES (?,?,?,?,?,?,?,?,?,?);`, [task_name, task_id, task_description, task_status, task_creator, task_owner, task_createdate, task_notes, task_plan, task_app_acronym]);
@@ -94,7 +109,7 @@ export const editTask = catchAsyncErrors(async (req, res, next) => {
     if (dataTask.length == 0) return next(new ErrorHandler(`Task not found???`, 400, "ER_FIELD_INVALID"));
     const latestTaskState = dataTask[0];
     //compare user request task state and task state in database, if not equal -> user sent stale data, ask them to refresh
-    if (!(latestTaskState.task_status == task_status)) return next(new ErrorHandler(`Task has been updated, please refresh`, 410, "ER_REFRESH"));
+    if (!(latestTaskState.task_status == task_status)) return next(new ErrorHandler(`Task state has been changed, please refresh`, 410, "ER_REFRESH"));
 
     //if user trying to update plan make sure new plan is defined
     if (task_plan) {
@@ -176,10 +191,10 @@ export const editTask = catchAsyncErrors(async (req, res, next) => {
 
     var today = new Date(Date.now());
     //append logs to task notes
-    task_notes = `\n-------------------------------------------------------------\n${task_status} --> ${new_status} edited by ${req.user["username"]} on\n${today}\nNotes following ---------------------------------------------\n${task_notes}`;
+    task_notes = `\n----------------------------------------------------------------------\n${task_status} --> ${new_status} edited by ${req.user["username"]} on\n${today}\n########## -----NOTES----- ##########\n${task_notes}\n`;
 
     //try to update data to database
-    const [data, fields] = await connection.execute(`UPDATE tasks SET task_description=? , task_status=? , task_owner=? , task_notes=CONCAT(COALESCE(task_notes,''),?) , task_plan=? WHERE task_id=?;`, [task_description, new_status, task_owner, task_notes, task_plan, task_id]);
+    const [data, fields] = await connection.execute(`UPDATE tasks SET task_description=? , task_status=? , task_owner=? , task_notes=CONCAT(?,COALESCE(task_notes,'')) , task_plan=? WHERE task_id=?;`, [task_description, new_status, task_owner, task_notes, task_plan, task_id]);
 
     //check result of update
     if (data.affectedRows == 0) return next(new ErrorHandler(`Error updating task, please try again`, 400, "ER_FIELD_INVALID"));
