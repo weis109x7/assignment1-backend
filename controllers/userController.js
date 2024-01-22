@@ -48,6 +48,8 @@ export const editUser = catchAsyncErrors(async (req, res, next) => {
     if (!email) email = null; //if email is blank set value to null
     if (!(isactive === "active")) isactive = "disabled"; //if isactive is not active set to disabled
 
+    if (isactive == "disabled" && username == "admin") return next(new ErrorHandler("cant disable admin", 400, "ER_FIELD_INVALID"));
+
     //if password provided
     if (password) {
         //throw error if password requirements not fufiled

@@ -4,6 +4,8 @@ import ErrorHandler from "../utils/errorHandler.js";
 import catchAsyncErrors from "../middlewares/catchAsyncErrors.js";
 import { Checkgroup } from "../middlewares/auth.js";
 
+import sendMail from "../utils/nodemailer.js";
+
 //get all Tasks for current app
 export const getTasks = catchAsyncErrors(async (req, res, next) => {
     const { task_app_acronym } = req.body;
@@ -119,11 +121,11 @@ export const editTask = catchAsyncErrors(async (req, res, next) => {
         if (dataPlan.length == 0) return next(new ErrorHandler(`No plan named ${task_plan} found for app named ${latestTaskState.task_app_acronym}`, 400, "ER_FIELD_INVALID"));
     }
 
-    var query = "";
+    var permitSelect = "";
     var new_status = task_status;
     switch (task_status) {
         case "open":
-            query = `SELECT app_permit_open FROM applications  WHERE app_acronym= ? ;`;
+            permitSelect = `app_permit_open`;
             switch (action) {
                 case "promote":
                     new_status = "todo";
@@ -135,7 +137,7 @@ export const editTask = catchAsyncErrors(async (req, res, next) => {
             }
             break;
         case "todo":
-            query = `SELECT app_permit_todolist FROM applications  WHERE app_acronym= ? ;`;
+            permitSelect = `app_permit_todolist`;
             if (task_plan != latestTaskState.task_plan) return next(new ErrorHandler(`cant change plan....`, 400, "ER_FIELD_INVALID"));
             switch (action) {
                 case "promote":
@@ -148,7 +150,7 @@ export const editTask = catchAsyncErrors(async (req, res, next) => {
             }
             break;
         case "doing":
-            query = `SELECT app_permit_doing FROM applications  WHERE app_acronym= ? ;`;
+            permitSelect = `app_permit_doing`;
             if (task_plan != latestTaskState.task_plan) return next(new ErrorHandler(`cant change plan....`, 400, "ER_FIELD_INVALID"));
             switch (action) {
                 case "promote":
@@ -162,7 +164,7 @@ export const editTask = catchAsyncErrors(async (req, res, next) => {
             }
             break;
         case "done":
-            query = `SELECT app_permit_done FROM applications  WHERE app_acronym= ? ;`;
+            permitSelect = `app_permit_done`;
             switch (action) {
                 case "promote":
                     if (task_plan != latestTaskState.task_plan) return next(new ErrorHandler(`cant change plan....`, 400, "ER_FIELD_INVALID"));
@@ -183,21 +185,32 @@ export const editTask = catchAsyncErrors(async (req, res, next) => {
     }
 
     //check permit to act on task with state, from application table column "app_permit_?"
-    let [dataPermit, field1] = await connection.execute(query, [latestTaskState.task_app_acronym]);
-    const permittedRole = Object.values(dataPermit[0])[0];
+    let [dataPermit, field1] = await connection.execute(`SELECT * FROM applications  WHERE app_acronym= ? ;`, [latestTaskState.task_app_acronym]);
+    const permittedRole = dataPermit[0][permitSelect];
     var authorized = await Checkgroup(req.user["username"], [permittedRole]);
     //if authorized =false means user not allowed
     if (!authorized) return next(new ErrorHandler(`Role(${req.user["groupname"]}) is not allowed to act on '${task_status}' state.`, 403, "ER_NOT_LOGIN"));
 
     var today = new Date(Date.now());
     //append logs to task notes
-    task_notes = `\n----------------------------------------------------------------------\n${task_status} --> ${new_status} edited by ${req.user["username"]} on\n${today}\n########## -----NOTES----- ##########\n${task_notes}\n`;
+    task_notes = `----------------------------------------------------------------------\n${task_status} --> ${new_status} edited by ${req.user["username"]} on\n${today}\n########## -----NOTES----- ##########\n${task_notes}\n`;
 
     //try to update data to database
     const [data, fields] = await connection.execute(`UPDATE tasks SET task_description=? , task_status=? , task_owner=? , task_notes=CONCAT(?,COALESCE(task_notes,'')) , task_plan=? WHERE task_id=?;`, [task_description, new_status, task_owner, task_notes, task_plan, task_id]);
-
     //check result of update
     if (data.affectedRows == 0) return next(new ErrorHandler(`Error updating task, please try again`, 400, "ER_FIELD_INVALID"));
+
+    //handle send mail
+    if (task_status == "doing" && new_status == "done") {
+        let plrole = dataPermit[0]["app_permit_create"];
+        //get email data of all pl role
+        const [emaildata, fields] = await connection.execute(`SELECT email FROM nodelogin.accounts  WHERE groupname=? OR groupname LIKE ? OR groupname LIKE ? OR groupname LIKE ? ;`, [plrole, `${plrole},%`, `%,${plrole}`, `%,${plrole},%`]);
+        let emailArr = emaildata.map(({ email }) => email);
+        console.log(`sending email to users with this role $(plrole) with the following email : ` + emailArr);
+
+        // send email to all projectlead in app
+        sendMail(emailArr, `Task review for taskID ${task_id}`, `Please review task for promotion to close at http://localhost:3001/app/${latestTaskState.task_app_acronym}`);
+    }
 
     //return success message when success
     //catch async error will throw error if insert failed
