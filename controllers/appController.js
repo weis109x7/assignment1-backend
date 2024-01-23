@@ -34,15 +34,15 @@ export const newApp = catchAsyncErrors(async (req, res, next) => {
 
     //field check
     //no special char, <45 char, word or word+numeric
-    if (!/^(?=.*[a-zA-Z])[a-zA-Z0-9]{1,45}$/.test(app_acronym)) return next(new ErrorHandler("app acronym needs to be <45 char, no special char, word or word+numeric", 400, "ER_FIELD_INVALID"));
+    if (!/^[a-zA-Z][a-zA-Z0-9]{0,44}$/.test(app_acronym)) return next(new ErrorHandler("app acronym needs to be <45 char, no special char, word or word+numeric", 400, "ER_FIELD_INVALID"));
     if (app_description) {
         //if no description dont need check
         if (!/^.{1,255}$/.test(app_description)) return next(new ErrorHandler("app description needs to be <255 char", 400, "ER_FIELD_INVALID"));
     }
     if (!app_rnumber) return next(new ErrorHandler("app r number is missing", 400, "ER_FIELD_INVALID"));
     if (!(app_rnumber >= 0 && app_rnumber <= 100000)) return next(new ErrorHandler("app rnumber needs to be between 0 and 100000", 400, "ER_FIELD_INVALID"));
-    if (!(app_startdate && app_enddate)) return next(new ErrorHandler("app start date end date somehow missing?", 400, "ER_FIELD_INVALID"));
-    if (!(app_permit_create && app_permit_open && app_permit_todolist && app_permit_doing && app_permit_done)) return next(new ErrorHandler("app permissions somehow missing?", 400, "ER_FIELD_INVALID"));
+    if (!(app_startdate && app_enddate)) return next(new ErrorHandler("app start date end date missing", 400, "ER_FIELD_INVALID"));
+    if (!(app_permit_create && app_permit_open && app_permit_todolist && app_permit_doing && app_permit_done)) return next(new ErrorHandler("app permissions missing", 400, "ER_FIELD_INVALID"));
 
     //try to insert data to database
     const [data, fields] = await connection.execute(`INSERT INTO applications VALUES (?,?,?,?,?,?,?,?,?,?);`, [app_acronym, app_description, app_rnumber, app_startdate, app_enddate, app_permit_create, app_permit_open, app_permit_todolist, app_permit_doing, app_permit_done]);
