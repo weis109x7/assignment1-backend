@@ -132,8 +132,10 @@ export const editTask = catchAsyncErrors(async (req, res, next) => {
                     break;
                 case "demote":
                     return next(new ErrorHandler(`cant demote open status`, 400, "ER_FIELD_INVALID"));
-                default:
+                case "edit":
                     break;
+                default:
+                    return next(new ErrorHandler(`unrechable code???? why are you here....`, 400, "ER_FIELD_INVALID"));
             }
             break;
         case "todo":
@@ -145,8 +147,10 @@ export const editTask = catchAsyncErrors(async (req, res, next) => {
                     break;
                 case "demote":
                     return next(new ErrorHandler(`cant demote todo status`, 400, "ER_FIELD_INVALID"));
-                default:
+                case "edit":
                     break;
+                default:
+                    return next(new ErrorHandler(`unrechable code???? why are you here....`, 400, "ER_FIELD_INVALID"));
             }
             break;
         case "doing":
@@ -159,8 +163,10 @@ export const editTask = catchAsyncErrors(async (req, res, next) => {
                 case "demote":
                     new_status = "todo";
                     break;
-                default:
+                case "edit":
                     break;
+                default:
+                    return next(new ErrorHandler(`unrechable code???? why are you here....`, 400, "ER_FIELD_INVALID"));
             }
             break;
         case "done":
@@ -173,9 +179,11 @@ export const editTask = catchAsyncErrors(async (req, res, next) => {
                 case "demote":
                     new_status = "doing";
                     break;
-                default:
+                case "edit":
                     if (task_plan != latestTaskState.task_plan) return next(new ErrorHandler(`cant change plan....`, 400, "ER_FIELD_INVALID"));
                     break;
+                default:
+                    return next(new ErrorHandler(`unrechable code???? why are you here....`, 400, "ER_FIELD_INVALID"));
             }
             break;
         case "closed":
