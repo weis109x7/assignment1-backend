@@ -25,7 +25,7 @@ export const newPlan = catchAsyncErrors(async (req, res, next) => {
 
     //field check
     //no special char, <45 char, word or word+numeric
-    if (!/^(?=.*[a-zA-Z])[a-zA-Z0-9]{1,45}$/.test(plan_mvp_name)) return next(new ErrorHandler("plan_mvp_name is required and needs to be <45 char, no special char, word or word+numeric", 400, "ER_FIELD_INVALID"));
+    if (!/^(?=.{1,45}$)[a-zA-Z0-9]+(?:\s+[a-zA-Z0-9]+)*$/.test(plan_mvp_name)) return next(new ErrorHandler("plan name must be not more than 45 char, no trailing and leading whitespaces, no special characters", 400, "ER_FIELD_INVALID"));
     if (!(plan_startdate && plan_enddate)) return next(new ErrorHandler("plan start date and/or end date is missing?", 400, "ER_FIELD_INVALID"));
     if (!plan_app_acronym) return next(new ErrorHandler("plan app acronym is somehow missing?? (plan is not tied to app)", 400, "ER_FIELD_INVALID"));
 

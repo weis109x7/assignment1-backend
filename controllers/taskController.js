@@ -47,7 +47,7 @@ export const newTask = catchAsyncErrors(async (req, res, next) => {
 
     //field check
     //no special char, <45 char, word or word+numeric
-    if (!/^(?=.*[a-zA-Z])[a-zA-Z0-9]{1,45}$/.test(task_name)) return next(new ErrorHandler("task_name is required and needs to be <45 char, no special char, word or word+numeric", 400, "ER_FIELD_INVALID"));
+    if (!/^(?=.{1,45}$)[a-zA-Z0-9]+(?:\s+[a-zA-Z0-9]+)*$/.test(task_name)) return next(new ErrorHandler("task_name is required and must be not more than 45 char, no trailing and leading whitespaces, no special characters", 400, "ER_FIELD_INVALID"));
     if (task_description) {
         //if no description dont need check
         if (!/^.{1,255}$/.test(task_description)) return next(new ErrorHandler("task_description needs to be <255 char", 400, "ER_FIELD_INVALID"));

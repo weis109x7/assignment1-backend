@@ -50,6 +50,8 @@ export const editUser = catchAsyncErrors(async (req, res, next) => {
 
     if (isactive == "disabled" && username == "admin") return next(new ErrorHandler("cant disable admin", 400, "ER_FIELD_INVALID"));
 
+    if (username == "admin" && !groupname.split(",").includes("admin")) return next(new ErrorHandler("cant remove admin, admin rights", 400, "ER_FIELD_INVALID"));
+
     //if password provided
     if (password) {
         //throw error if password requirements not fufiled
@@ -145,6 +147,6 @@ function passwordChecker(password) {
 //reges checker function to make sure input fufils requirement
 function usernameChecker(input) {
     //regex matches <=45 char with no special character, word or word+digits
-    const regex = new RegExp(/^(?=.*[a-zA-Z])[a-zA-Z0-9]{1,45}$/);
+    const regex = new RegExp(/^[a-zA-Z][a-zA-Z0-9]{0,44}$/);
     return regex.test(input);
 }

@@ -48,6 +48,6 @@ export const getGroups = catchAsyncErrors(async (req, res, next) => {
 //reges checker function to make sure input fufils requirement
 function groupnameChecker(groupname) {
     //regex matches <=45 char with no special character, word or word+digits
-    const regex = new RegExp(/^(?=.*[a-zA-Z])[a-zA-Z0-9]{1,45}$/);
+    const regex = new RegExp(/^[a-zA-Z][a-zA-Z0-9]{0,44}$/);
     return regex.test(groupname);
 }
