@@ -115,7 +115,6 @@ export const editTask = catchAsyncErrors(async (req, res, next) => {
 
     //if user trying to update plan make sure new plan is defined
     if (task_plan) {
-        //check if plan exist only if plan is provided, else assign task to app
         let [dataPlan, field] = await connection.execute(`SELECT plan_mvp_name FROM plans WHERE plan_mvp_name= ? AND plan_app_acronym = ?;`, [task_plan, latestTaskState.task_app_acronym]);
         //no plan found so cant create task for plan
         if (dataPlan.length == 0) return next(new ErrorHandler(`No plan named ${task_plan} found for app named ${latestTaskState.task_app_acronym}`, 400, "ER_FIELD_INVALID"));
