@@ -200,7 +200,7 @@ export const editTask = catchAsyncErrors(async (req, res, next) => {
 
     var today = new Date(Date.now());
     //append logs to task notes
-    task_notes = `----------------------------------------------------------------------\n${task_status} --> ${new_status} edited by ${req.user["username"]} on\n${today}\n########## -----NOTES----- ##########\n${task_notes}\n`;
+    task_notes = `----------------------------------------------------------------------\nTask Status changed from ${task_status} --> ${new_status} edited by ${req.user["username"]} on\n${today}\nPlan changed from {${latestTaskState.task_plan ? latestTaskState.task_plan : `-NO-PLAN-`}} to {${task_plan ? task_plan : `-NO-PLAN-`}}\n########## -----NOTES----- ##########\n${task_notes}\n`;
 
     //try to update data to database
     const [data, fields] = await connection.execute(`UPDATE tasks SET task_description=? , task_status=? , task_owner=? , task_notes=CONCAT(?,COALESCE(task_notes,'')) , task_plan=? WHERE task_id=?;`, [task_description, new_status, task_owner, task_notes, task_plan, task_id]);
