@@ -15,13 +15,13 @@ process.on("uncaughtException", (err) => {
 import dotenv from "dotenv";
 dotenv.config({ path: "./config/config.env" });
 
-//setup cors midleware
-import cors from "cors";
-var corsOptions = {
-    origin: "http://localhost:3002",
-    optionsSuccessStatus: 200,
-};
-app.use(cors(corsOptions));
+// //setup cors midleware
+// import cors from "cors";
+// var corsOptions = {
+//     origin: "http://localhost:3000",
+//     optionsSuccessStatus: 200,
+// };
+// app.use(cors(corsOptions));
 
 //setup body parser middleware
 app.use(express.json());
@@ -35,7 +35,9 @@ app.post("/PromoteTask2Done", PromoteTask2Done); //auth done in route level
 
 // Handle unhandled routes
 app.all("*", (req, res, next) => {
-    next(new ErrorHandler(`${req.originalUrl} route not found`, 200, "E404"));
+    return res.status(400).json({
+        code: "V1",
+    });
 });
 
 //use error middleware

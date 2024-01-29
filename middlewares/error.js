@@ -21,27 +21,34 @@ export function errorMiddleware(err, req, res, next) {
         let error = { ...err };
 
         error.message = err.message;
+
+        // // Handle Could not connect to database
+        // if (err.code === "ENOTFOUND") {
+        //     const message = "Could not connect to database.";
+        //     error = new ErrorHandler(message, 500);
+        // }
+
+        // // Handling Wrong JWT token error
+        // if (err.name === "JsonWebTokenError") {
+        //     const message = "JSON Web token is invalid. Please Login again!";
+        //     error = new ErrorHandler(message, 500, "ER_JWT_INVALID");
+        // }
+
+        // // Handling Expired JWT token error
+        // if (err.name === "TokenExpiredError") {
+        //     const message = "JSON Web token is invalid. Please Login again!";
+        //     error = new ErrorHandler(message, 500, "ER_JWT_INVALID");
+        // }
+
         // Handle Could not connect to database
-        if (err.code === "ENOTFOUND") {
-            const message = "Could not connect to database.";
-            error = new ErrorHandler(message, 500);
+        if (err.code === "ER_DATA_TOO_LONG") {
+            return res.status(400).json({
+                code: "E3",
+            });
         }
 
-        // Handling Wrong JWT token error
-        if (err.name === "JsonWebTokenError") {
-            const message = "JSON Web token is invalid. Please Login again!";
-            error = new ErrorHandler(message, 500, "ER_JWT_INVALID");
-        }
-
-        // Handling Expired JWT token error
-        if (err.name === "TokenExpiredError") {
-            const message = "JSON Web token is invalid. Please Login again!";
-            error = new ErrorHandler(message, 500, "ER_JWT_INVALID");
-        }
-
-        res.status(error.statusCode).json({
-            message: error.message || "Internal Server Error.",
-            errorCode: error.code || "No Error Code",
+        return res.status(400).json({
+            code: "GG420",
         });
     }
 }

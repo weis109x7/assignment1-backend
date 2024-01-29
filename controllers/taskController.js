@@ -32,20 +32,39 @@ const connection = connect.promise();
 
 //get all Tasks for current app
 export const GetTaskbyState = catchAsyncErrors(async (req, res, next) => {
-    const { username, password, task_app_acronym,task_status } = req.body;
-    if (!(username&& password&& task_app_acronym&& task_status)) return next(new ErrorHandler("empty fields", 200, "error code"));
+    const { username, password, task_app_acronym, task_status } = req.body;
+    if (!(username && password && task_app_acronym && task_status))
+        return res.status(200).json({
+            code: "V2",
+        });
 
-    const user = await isAuthenthicated(username,password)
-    if (!user) next(new ErrorHandler("cant login", 200, "error code"));
+    const user = await isAuthenthicated(username, password);
+    if (!user)
+        return res.status(200).json({
+            code: "A1",
+        });
+
+    if (!(task_status == "open" || task_status == "todo" || task_status == "doing" || task_status == "done" || task_status == "closed")) {
+        return res.status(200).json({
+            code: "E1",
+        });
+    }
+
+    //check app exist
+    const [appData, fields1] = await connection.execute(`SELECT * FROM applications WHERE app_acronym= ? ;`, [task_app_acronym]);
+    if (appData.length == 0)
+        return res.status(200).json({
+            code: "E2",
+        });
 
     //get all task in database for respective app
-    const [data, fields] = await connection.execute(`SELECT * FROM tasks WHERE task_app_acronym= ? AND task_status= ?;`, [task_app_acronym,task_status]);
+    const [data, fields] = await connection.execute(`SELECT * FROM tasks WHERE task_app_acronym= ? AND task_status= ?;`, [task_app_acronym, task_status]);
 
     //return success message when success
     //catch async error will throw error if query failed
     return res.status(200).json({
-        success: true,
-        message: data,
+        code: "S1",
+        results: data,
     });
 });
 
@@ -53,38 +72,58 @@ export const GetTaskbyState = catchAsyncErrors(async (req, res, next) => {
 export const CreateTask = catchAsyncErrors(async (req, res, next) => {
     // get task details from req body
     var { username, password, task_name, task_description, task_notes, task_plan, task_app_acronym } = req.body;
-    if (!(username&&password&&task_name&&task_app_acronym)) return next(new ErrorHandler("empty fields", 200, "error code"));
+    if (!(username && password && task_name && task_app_acronym))
+        return res.status(200).json({
+            code: "V2",
+        });
+    const user = await isAuthenthicated(username, password);
+    if (!user)
+        return res.status(200).json({
+            code: "A1",
+        });
 
-    const user = await isAuthenthicated(username,password)
-    if (!user) next(new ErrorHandler("cant login", 200, "error code"));
-
-    const task_creator = user["username"];
-    const task_owner = user["username"];
+    const task_creator = username;
+    const task_owner = username;
     const task_status = "open";
     const task_createdate = Math.floor(Date.now() / 1000);
-
-    //field check
-    //no special char, <45 char, word or word+numeric
-    if (!/^(?=.{1,45}$)[a-zA-Z0-9]+(?:\s+[a-zA-Z0-9]+)*$/.test(task_name)) return next(new ErrorHandler("task_name is required and must be not more than 45 char, no trailing and leading whitespaces, no special characters", 400, "ER_FIELD_INVALID"));
-    if (task_description) {
-        //if no description dont need check
-        if (!/^.{1,255}$/.test(task_description)) return next(new ErrorHandler("task_description needs to be <255 char", 400, "ER_FIELD_INVALID"));
-    }
 
     //check permit to create task, from application table column "app_permit_create" (get r number here as well)
     let [dataPermit, field1] = await connection.execute(`SELECT app_permit_create , app_rnumber FROM applications  WHERE app_acronym= ? ;`, [task_app_acronym]);
     //no app found so cant create plan for app
-    if (dataPermit.length == 0) return next(new ErrorHandler(`No app found for ${task_app_acronym}`, 400, "ER_FIELD_INVALID"));
+    if (dataPermit.length == 0)
+        return res.status(200).json({
+            code: "A2",
+        });
     const permittedRole = dataPermit[0]["app_permit_create"];
     var authorized = user["groupname"].includes(permittedRole);
     //if authorized =false means user not allowed
-    if (!authorized) return next(new ErrorHandler(`Role(${user["groupname"]}) is not allowed to create new task.`, 403, "ER_NOT_LOGIN"));
+    if (!authorized)
+        return res.status(200).json({
+            code: "A3",
+        });
+
+    //field check
+    //no special char, <45 char, word or word+numeric
+    if (!/^(?=.{1,45}$)[a-zA-Z0-9]+(?:\s+[a-zA-Z0-9]+)*$/.test(task_name))
+        return res.status(200).json({
+            code: "E1",
+        });
+    if (task_description) {
+        //if no description dont need check
+        if (!/^.{1,255}$/.test(task_description))
+            return res.status(200).json({
+                code: "E2",
+            });
+    }
 
     if (task_plan) {
         //check if plan exist only if plan is provided, else assign task to app
         let [dataPlan, field2] = await connection.execute(`SELECT plan_mvp_name FROM plans WHERE plan_mvp_name= ? AND plan_app_acronym = ?;`, [task_plan, task_app_acronym]);
         //no plan found so cant create task for plan
-        if (dataPlan.length == 0) return next(new ErrorHandler(`No plan named ${task_plan} found for app named ${task_app_acronym}`, 400, "ER_FIELD_INVALID"));
+        if (dataPlan.length == 0)
+            return res.status(200).json({
+                code: "E4",
+            });
     }
 
     //get number from database app r number
@@ -104,46 +143,69 @@ export const CreateTask = catchAsyncErrors(async (req, res, next) => {
     //catch async error will throw error if insert failed
     return res.status(200).json({
         task_id: task_id,
-        code: "200",
+        code: "S1",
     });
 });
 
 //edit task api
 export const PromoteTask2Done = catchAsyncErrors(async (req, res, next) => {
     //get task details from req body
-    var { username,password,task_id, task_notes } = req.body;
+    var { username, password, task_id, task_notes } = req.body;
 
-    if (!(username&&password&&task_id)) return next(new ErrorHandler("empty fields", 200, "error code"));
+    if (!(username && password && task_id))
+        return res.status(200).json({
+            code: "V2",
+        });
 
-    const user = await isAuthenthicated(username,password)
-    if (!user) next(new ErrorHandler("cant login", 200, "error code"));
+    const user = await isAuthenthicated(username, password);
+    if (!user)
+        return res.status(200).json({
+            code: "A1",
+        });
 
-    const task_owner = user["username"];
-
-    //get latest task state
-    let [dataTask, field] = await connection.execute(`SELECT * FROM tasks WHERE task_id= ? AND task_status= ?;`, [task_id,"doing"]);
-    //if no task found with id and in doing state??? return error
-    if (dataTask.length == 0) return next(new ErrorHandler(`Task not found???`, 400, "ER_FIELD_INVALID"));
-    const latestTaskState = dataTask[0];
-
+    const task_owner = username;
 
     //check permit to act on task with state, from application table column "app_permit_?"
-    let [dataPermit, field1] = await connection.execute(`SELECT * FROM applications  WHERE app_acronym= ? ;`, [latestTaskState.task_app_acronym]);
+    let [dataPermit, field1] = await connection.execute(`SELECT * FROM applications  WHERE app_acronym= ? ;`, [task_id.split("_")[0]]);
+    //no app found so cant access perms for app
+    if (dataPermit.length == 0)
+        return res.status(200).json({
+            code: "A2",
+        });
     const permittedRole = dataPermit[0]["app_permit_doing"];
     var authorized = user["groupname"].includes(permittedRole);
     //if authorized =false means user not allowed
-    if (!authorized) return next(new ErrorHandler(`Role(${user["groupname"]}) is not allowed to act on '${task_status}' state.`, 403, "ER_NOT_LOGIN"));
+    if (!authorized)
+        return res.status(200).json({
+            code: "A3",
+        });
+
+    //get latest task state
+    let [dataTask, field] = await connection.execute(`SELECT * FROM tasks WHERE task_id= ?;`, [task_id]); //seperate taskid and state check
+    //if no task found with id and in doing state??? return error
+    if (dataTask.length == 0)
+        return res.status(200).json({
+            code: "E1",
+        });
+    const latestTaskState = dataTask[0];
+
+    if (latestTaskState.task_status != "doing") {
+        return res.status(200).json({
+            code: "E2",
+        });
+    }
 
     var today = new Date(Date.now());
     //append logs to task notes
-    task_notes = `----------------------------------------------------------------------\nTask Status changed from ${task_status} --> ${"done"} edited by ${user["username"]} on\n${today}\nPlan changed from {${latestTaskState.task_plan ? latestTaskState.task_plan : `-NO-PLAN-`}} to {${task_plan ? task_plan : `-NO-PLAN-`}}\n########## -----NOTES----- ##########\n${task_notes}\n`;
+    task_notes = `----------------------------------------------------------------------\nTask Status changed from ${"doing"} --> ${"done"} edited by ${user["username"]} on\n${today}\nPlan changed from {${latestTaskState.task_plan ? latestTaskState.task_plan : `-NO-PLAN-`}} to {${latestTaskState.task_plan ? latestTaskState.task_plan : `-NO-PLAN-`}}\n########## -----NOTES----- ##########\n${task_notes}\n`;
 
     //try to update data to database
-    const [data, fields] = await connection.execute(`UPDATE tasks SET task_description=? , task_status=? , task_owner=? , task_notes=CONCAT(?,COALESCE(task_notes,'')) , task_plan=? WHERE task_id=?;`, [task_description, "done", task_owner, task_notes, task_plan, task_id]);
+    const [data, fields] = await connection.execute(`UPDATE tasks SET task_status="done" , task_owner=? , task_notes=CONCAT(?,COALESCE(task_notes,''))  WHERE task_id=?;`, [task_owner, task_notes, task_id]);
     //check result of update
-    if (data.affectedRows == 0) return next(new ErrorHandler(`Error updating task, please try again`, 400, "ER_FIELD_INVALID"));
-
-
+    if (data.affectedRows == 0)
+        return res.status(200).json({
+            code: "GG420",
+        });
     //handle send mail
     let plrole = dataPermit[0]["app_permit_create"];
     //get email data of all pl role
@@ -154,31 +216,28 @@ export const PromoteTask2Done = catchAsyncErrors(async (req, res, next) => {
     // send email to all projectlead in app
     sendMail(emailArr, `Task review for taskID ${task_id}`, `Please review task for promotion to close at http://localhost:3001/app/${latestTaskState.task_app_acronym}`);
 
-
     //return success message when success
     //catch async error will throw error if insert failed
     return res.status(200).json({
-        success: true,
-        message: "Sucessfully edited task",
+        task_id: task_id,
+        code: "S1",
     });
 });
-
-
 
 //handle user authenthicating
 const isAuthenthicated = catchAsyncErrors(async (username, password) => {
     //return if null
-    if (!username || !password) return
+    if (!username || !password) return;
     //look in db for account and retrive passhash to compare
     const [data, fields] = await connection.execute(`SELECT username,password,email,groupname,isactive FROM accounts  WHERE username=?;`, [username]);
     //no user found
-    if (data.length == 0) return
+    if (data.length == 0) return;
     //check password match
     const passMatched = await bcrypt.compare(password, data[0]["password"]);
     //not matched return error
-    if (!passMatched) return
+    if (!passMatched) return;
     //check status of account
-    if (data[0].isactive == "disabled") return
+    if (data[0].isactive == "disabled") return;
 
     //remove password from user data, add token to user data
     delete data[0].password;
