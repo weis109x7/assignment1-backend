@@ -19,7 +19,6 @@ export function errorMiddleware(err, req, res, next) {
     //prod error message show generic error msg
     if (process.env.NODE_ENV === "production ") {
         let error = { ...err };
-
         error.message = err.message;
 
         // // Handle Could not connect to database
@@ -34,11 +33,12 @@ export function errorMiddleware(err, req, res, next) {
         //     error = new ErrorHandler(message, 500, "ER_JWT_INVALID");
         // }
 
-        // // Handling Expired JWT token error
-        // if (err.name === "TokenExpiredError") {
-        //     const message = "JSON Web token is invalid. Please Login again!";
-        //     error = new ErrorHandler(message, 500, "ER_JWT_INVALID");
-        // }
+        // Handling Expired JWT token error
+        if (err.type === "entity.parse.failed") {
+            return res.status(400).json({
+                code: "V2",
+            });
+        }
 
         // Handle Could not connect to database
         if (err.code === "ER_DATA_TOO_LONG") {
@@ -46,7 +46,7 @@ export function errorMiddleware(err, req, res, next) {
                 code: "E3",
             });
         }
-
+        console.log(err);
         return res.status(400).json({
             code: "GG420",
         });

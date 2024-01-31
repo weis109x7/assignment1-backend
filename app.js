@@ -26,12 +26,25 @@ dotenv.config({ path: "./config/config.env" });
 //setup body parser middleware
 app.use(express.json());
 
+app.use(function (req, res, next) {
+    try {
+        decodeURIComponent(req.path);
+    } catch (e) {
+        return res.status(400).json({
+            code: "V1",
+        });
+    }
+    next();
+});
+
 //import routes from tasks controller
 import { GetTaskbyState, CreateTask, PromoteTask2Done } from "./controllers/taskController.js";
+import { checkType } from "./middlewares/checkType.js";
+
 //add routes with middlewares
-app.post("/GetTaskbyState", GetTaskbyState);
-app.post("/CreateTask", CreateTask); //auth done in route level
-app.post("/PromoteTask2Done", PromoteTask2Done); //auth done in route level
+app.post("/GetTaskbyState", checkType, GetTaskbyState);
+app.post("/CreateTask", checkType, CreateTask); //auth done in route level
+app.post("/PromoteTask2Done", checkType, PromoteTask2Done); //auth done in route level
 
 // Handle unhandled routes
 app.all("*", (req, res, next) => {

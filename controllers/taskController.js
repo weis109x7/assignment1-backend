@@ -72,6 +72,14 @@ export const GetTaskbyState = catchAsyncErrors(async (req, res, next) => {
 export const CreateTask = catchAsyncErrors(async (req, res, next) => {
     // get task details from req body
     var { username, password, task_name, task_description, task_notes, task_plan, task_app_acronym } = req.body;
+
+    if (!task_description) {
+        task_description = null;
+    }
+    if (!task_plan) {
+        task_plan = "";
+    }
+
     if (!(username && password && task_name && task_app_acronym))
         return res.status(200).json({
             code: "V2",
@@ -88,7 +96,7 @@ export const CreateTask = catchAsyncErrors(async (req, res, next) => {
     const task_createdate = Math.floor(Date.now() / 1000);
 
     //check permit to create task, from application table column "app_permit_create" (get r number here as well)
-    let [dataPermit, field1] = await connection.execute(`SELECT app_permit_create , app_rnumber FROM applications  WHERE app_acronym= ? ;`, [task_app_acronym]);
+    let [dataPermit, field1] = await connection.execute(`SELECT app_acronym, app_permit_create , app_rnumber FROM applications  WHERE app_acronym= ? ;`, [task_app_acronym]);
     //no app found so cant create plan for app
     if (dataPermit.length == 0)
         return res.status(200).json({
@@ -127,7 +135,7 @@ export const CreateTask = catchAsyncErrors(async (req, res, next) => {
     }
 
     //get number from database app r number
-    var task_id = `${task_app_acronym}_${dataPermit[0]["app_rnumber"] + 1}`;
+    var task_id = `${dataPermit[0]["app_acronym"]}_${dataPermit[0]["app_rnumber"] + 1}`;
 
     var today = new Date(Date.now());
     //append audit trail to notes
@@ -219,7 +227,6 @@ export const PromoteTask2Done = catchAsyncErrors(async (req, res, next) => {
     //return success message when success
     //catch async error will throw error if insert failed
     return res.status(200).json({
-        task_id: task_id,
         code: "S1",
     });
 });
