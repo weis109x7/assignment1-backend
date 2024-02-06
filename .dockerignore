@@ -2,3 +2,5 @@
 ./config/config.env
 .gitignore
 .dockerignore
+.git
+Dockerfile

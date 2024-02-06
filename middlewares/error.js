@@ -9,10 +9,13 @@ export function errorMiddleware(err, req, res, next) {
         let error = { ...err };
         error.message = err.message;
         res.status(error.statusCode).json({
+            // success: false,
+            // message: error.message || "Internal Server Error.",
+            // errorCode: error.code || "No Error Code",
+            // stack: err.stack,
             success: false,
-            message: error.message || "Internal Server Error.",
-            errorCode: error.code || "No Error Code",
-            stack: err.stack,
+            message: "Internal Server Error.",
+            errorCode: "No Error Code",
         });
     }
 
