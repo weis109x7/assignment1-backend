@@ -112,7 +112,11 @@ export const checkAppPermit = catchAsyncErrors(async (req, res, next) => {
             message: `${req.user["username"]} is part of ${gorupToCheck} group`,
         });
     } else {
-        return next(new ErrorHandler(`Role(${req.user["groupname"]}) is not part of ${gorupToCheck} group.`, 403, "ER_NOT_ALLOWED"));
+        return res.status(403).json({
+            success: false,
+            errorCode: "ER_NOT_ALLOWED",
+            message: `Role(${req.user["groupname"]}) is not part of ${gorupToCheck} group.`,
+        });
     }
 });
 
